@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -8,6 +8,18 @@ import Image from 'next/image';
 interface ClientLayoutProps {
   children: React.ReactNode;
   portfolioData: any;
+}
+
+// Curtain page transition between the portfolio and the CreaTune music site.
+// Any client component can call navigateWithCurtain(href) via useCurtain().
+type CurtainTone = 'light' | 'dark';
+
+export const CurtainContext = React.createContext<{ navigateWithCurtain: (href: string) => void }>({
+  navigateWithCurtain: () => {},
+});
+
+export function useCurtain() {
+  return useContext(CurtainContext);
 }
 
 export default function ClientLayout({ children, portfolioData }: ClientLayoutProps) {
@@ -22,7 +34,31 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
   // Mobile Burger Menu State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Curtain transition state
+  const [curtain, setCurtain] = useState<{ shut: boolean; tone: CurtainTone }>({ shut: false, tone: 'light' });
+  const pendingHref = useRef<string | null>(null);
+
+  const navigateWithCurtain = (href: string) => {
+    if (pendingHref.current) return;
+    const tone: CurtainTone = href.startsWith('/music') ? 'light' : 'dark';
+    pendingHref.current = href;
+    setCurtain({ shut: true, tone });
+    setTimeout(() => {
+      router.push(href);
+    }, 700);
+  };
+
+  useEffect(() => {
+    // Once the destination route has rendered, draw the curtains back open
+    if (pendingHref.current && pathname === pendingHref.current) {
+      pendingHref.current = null;
+      const t = setTimeout(() => setCurtain((c) => ({ ...c, shut: false })), 250);
+      return () => clearTimeout(t);
+    }
+  }, [pathname]);
+
   const is404 = pathname === '/_not-found' || pathname === '/404' || pathname === '/not-found';
+  const isMusicSection = pathname.startsWith('/music');
 
   // Load state from sessionStorage or similar to check if already authenticated
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -36,24 +72,60 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
     }
   }, []);
 
-  const handleOverrideSubmit = (e: React.FormEvent) => {
+  const handleOverrideSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const systemPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'admin123';
-    
-    if (overridePassword === systemPassword) {
-      sessionStorage.setItem('admin_password', overridePassword);
-      setIsAuthenticated(true);
-      setIsCatModalOpen(false);
-      setShowOverrideInput(false);
-      setOverridePassword('');
-      router.push('/admin');
-    } else {
-      setErrorMessage('DECRYPTION KEY MISMATCH');
+
+    // Validate against the server — the password never lives in client code
+    try {
+      const res = await fetch('/api/portfolio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': overridePassword,
+        },
+        body: JSON.stringify({ ping: true }),
+      });
+
+      if (res.status === 401) {
+        setErrorMessage('DECRYPTION KEY MISMATCH');
+        return;
+      }
+
+      if (res.status === 400 || res.ok) {
+        sessionStorage.setItem('admin_password', overridePassword);
+        setIsAuthenticated(true);
+        setIsCatModalOpen(false);
+        setShowOverrideInput(false);
+        setOverridePassword('');
+        router.push('/admin');
+      } else {
+        setErrorMessage('AUTH ERROR CODE: ' + res.status);
+      }
+    } catch {
+      setErrorMessage('CONNECTION ERROR');
     }
   };
 
   if (is404) {
     return <>{children}</>;
+  }
+
+  const curtains = (
+    <div className={`curtain-tone-${curtain.tone} ${curtain.shut ? 'curtain-shut' : ''}`}>
+      <div className="curtain-panel curtain-left"></div>
+      <div className="curtain-panel curtain-right"></div>
+      <span className="curtain-label">{curtain.tone === 'light' ? 'CREATUNE' : 'PORTFOLIO'}</span>
+    </div>
+  );
+
+  // The CreaTune music section renders as its own site: no portfolio chrome
+  if (isMusicSection) {
+    return (
+      <CurtainContext.Provider value={{ navigateWithCurtain }}>
+        {children}
+        {curtains}
+      </CurtainContext.Provider>
+    );
   }
 
   const profile = portfolioData?.profile || {
@@ -66,11 +138,11 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
     level: "LVL_99_DEV"
   };
 
-  // Top Bar main routes
+  // Top Bar main routes — HUD_STATS first: it is the landing page
   const topNavLinks = [
+    { label: 'HUD_STATS', href: '/' },
     { label: 'ARCHITECT', href: '/architect' },
     { label: 'INVENTORY', href: '/inventory' },
-    { label: 'HUD_STATS', href: '/' },
     { label: 'TERMINAL', href: '/terminal' }
   ];
 
@@ -83,6 +155,7 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
   ];
 
   return (
+    <CurtainContext.Provider value={{ navigateWithCurtain }}>
     <div className="min-h-screen flex flex-col font-body-md bg-background text-on-background relative select-none">
       {/* CRT Overlay effects */}
       <div className="scanline"></div>
@@ -158,12 +231,18 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
             {sideNavLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
-                <Link 
+                <Link
                   key={link.label}
                   href={link.href}
+                  onClick={(e) => {
+                    if (link.href === '/music') {
+                      e.preventDefault();
+                      navigateWithCurtain('/music');
+                    }
+                  }}
                   className={`flex items-center gap-3 p-3 text-pixel-label font-pixel-label transition-none ${
-                    isActive 
-                      ? 'bg-on-tertiary-fixed text-tertiary-fixed border-l-4 border-brand-amber' 
+                    isActive
+                      ? 'bg-on-tertiary-fixed text-tertiary-fixed border-l-4 border-brand-amber'
                       : 'text-on-surface-variant opacity-70 hover:bg-surface-container-high hover:opacity-100'
                   }`}
                 >
@@ -248,10 +327,16 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
                     <Link
                       key={link.label}
                       href={link.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={(e) => {
+                        setIsMobileMenuOpen(false);
+                        if (link.href === '/music') {
+                          e.preventDefault();
+                          navigateWithCurtain('/music');
+                        }
+                      }}
                       className={`p-3 border text-center font-code-sm uppercase ${
-                        isActive 
-                          ? 'border-brand-amber text-brand-amber bg-brand-amber-dim/10' 
+                        isActive
+                          ? 'border-brand-amber text-brand-amber bg-brand-amber-dim/10'
                           : 'border-outline-variant text-secondary hover:text-primary'
                       }`}
                     >
@@ -404,5 +489,7 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
         </div>
       )}
     </div>
+    {curtains}
+    </CurtainContext.Provider>
   );
 }
