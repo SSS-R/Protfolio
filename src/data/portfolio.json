@@ -82,39 +82,39 @@
       "image": "/images/pc_tower.png",
       "status": "SHIPPED",
       "category": "SHIPPED",
-      "link": "https://github.com/SSS-R/pdf-splitter"
+      "link": "https://sss-r.github.io/pdf-splitter/"
     },
     {
       "id": "wrestle-rumble",
       "title": "Wrestle Rumble",
       "subtitle": "LIVE",
-      "desc": "Full-stack monorepo with Next.js + Tailwind frontend and FastAPI + PostgreSQL backend. Card battle system with stat-based combat, rewards, trophies, and a live leaderboard.",
+      "desc": "Full-stack monorepo with Next.js + Tailwind frontend and FastAPI + PostgreSQL backend. Card battle system with stat-based combat, rewards, trophies, and a live leaderboard. Built for academic purposes.",
       "tech": ["Next.js", "FastAPI", "PostgreSQL"],
       "image": "/images/network_nodes.png",
-      "status": "SHIPPED",
-      "category": "SHIPPED",
+      "status": "ACADEMIC",
+      "category": "TBD",
       "link": "https://sss-r.github.io/Wrestle-Rumble"
     },
     {
       "id": "upi-fifa-paradox",
       "title": "UPI — FIFA Paradox",
       "subtitle": "RESEARCH",
-      "desc": "Unified Performance Index: multi-model football scoring pipeline combining Markov Chains, xG, xT, VAEP, and Discrete EPV over StatsBomb 360 freeze-frame data with Voronoi pitch control models.",
+      "desc": "Unified Performance Index: multi-model football scoring pipeline combining Markov Chains, xG, xT, VAEP, and Discrete EPV over StatsBomb 360 freeze-frame data with Voronoi pitch control models. Ongoing research, not yet deployed.",
       "tech": ["Python", "StatsBomb 360"],
       "image": "/images/network_nodes.png",
-      "status": "SHIPPED",
-      "category": "SHIPPED",
+      "status": "RESEARCH",
+      "category": "TBD",
       "link": "https://github.com/SSS-R"
     },
     {
       "id": "subway-surfer-3d",
       "title": "Subway Surfer 3D",
       "subtitle": "ENGINE",
-      "desc": "Complete 3D engine with perspective projection, dynamic camera, and real-time rendering. Three-lane navigation, gravity physics, procedural scenery, and progressive speed scaling.",
+      "desc": "Complete 3D engine with perspective projection, dynamic camera, and real-time rendering. Three-lane navigation, gravity physics, procedural scenery, and progressive speed scaling. Built for academic purposes.",
       "tech": ["C++", "Graphics"],
       "image": "/images/pc_tower.png",
-      "status": "SHIPPED",
-      "category": "SHIPPED",
+      "status": "ACADEMIC",
+      "category": "TBD",
       "link": "https://github.com/SSS-R"
     }
   ],
