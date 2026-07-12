@@ -10,9 +10,9 @@ interface ClientLayoutProps {
   portfolioData: any;
 }
 
-// Curtain page transition between the portfolio and the CreaTune music site.
+// Equalizer-bar page wipe between the portfolio and the CreaTune music site.
 // Any client component can call navigateWithCurtain(href) via useCurtain().
-type CurtainTone = 'light' | 'dark';
+type CurtainTone = 'music' | 'portfolio';
 
 export const CurtainContext = React.createContext<{ navigateWithCurtain: (href: string) => void }>({
   navigateWithCurtain: () => {},
@@ -34,18 +34,18 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
   // Mobile Burger Menu State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Curtain transition state
-  const [curtain, setCurtain] = useState<{ shut: boolean; tone: CurtainTone }>({ shut: false, tone: 'light' });
+  // Wipe transition state
+  const [curtain, setCurtain] = useState<{ shut: boolean; tone: CurtainTone }>({ shut: false, tone: 'music' });
   const pendingHref = useRef<string | null>(null);
 
   const navigateWithCurtain = (href: string) => {
     if (pendingHref.current) return;
-    const tone: CurtainTone = href.startsWith('/music') ? 'light' : 'dark';
+    const tone: CurtainTone = href.startsWith('/music') ? 'music' : 'portfolio';
     pendingHref.current = href;
     setCurtain({ shut: true, tone });
     setTimeout(() => {
       router.push(href);
-    }, 700);
+    }, 820);
   };
 
   useEffect(() => {
@@ -111,10 +111,11 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
   }
 
   const curtains = (
-    <div className={`curtain-tone-${curtain.tone} ${curtain.shut ? 'curtain-shut' : ''}`}>
-      <div className="curtain-panel curtain-left"></div>
-      <div className="curtain-panel curtain-right"></div>
-      <span className="curtain-label">{curtain.tone === 'light' ? 'CREATUNE' : 'PORTFOLIO'}</span>
+    <div className={`wipe-tone-${curtain.tone} ${curtain.shut ? 'wipe-shut' : ''}`}>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="wipe-bar"></div>
+      ))}
+      <span className="wipe-label">{curtain.tone === 'music' ? 'Creatune' : 'PORTFOLIO'}</span>
     </div>
   );
 

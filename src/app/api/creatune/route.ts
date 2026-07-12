@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { title, artist, duration, url } = body;
+    const { title, artist, duration, url, lyrics } = body;
 
     if (!title || !url) {
       return NextResponse.json({ error: 'Title and audio URL are required' }, { status: 400 });
@@ -57,6 +57,7 @@ export async function POST(request: Request) {
       duration: duration || '--:--',
       url,
       plays: 0,
+      lyrics: typeof lyrics === 'string' ? lyrics : '',
     };
     data.tracks.push(newTrack);
     await writeData(data);

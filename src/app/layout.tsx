@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, IBM_Plex_Mono, JetBrains_Mono, Press_Start_2P } from 'next/font/google';
+import { Inter, IBM_Plex_Mono, JetBrains_Mono, Press_Start_2P, Yellowtail, Montserrat } from 'next/font/google';
 import fs from 'fs/promises';
 import path from 'path';
 import './globals.css';
@@ -30,6 +30,22 @@ const pressStart2P = Press_Start_2P({
   weight: '400',
   subsets: ['latin'],
   variable: '--font-press-start-2p',
+  display: 'swap',
+});
+
+// Script face for the CreaTune wordmark (matches the studio's signature logo)
+const yellowtail = Yellowtail({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-script',
+  display: 'swap',
+});
+
+// Geometric sans for CreaTune display lettering (matches the banner's spaced caps)
+const montserrat = Montserrat({
+  weight: ['500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-display',
   display: 'swap',
 });
 
@@ -85,7 +101,7 @@ export default async function RootLayout({
   return (
     <html 
       lang="en" 
-      className={`${inter.variable} ${ibmPlexMono.variable} ${jetbrainsMono.variable} ${pressStart2P.variable} dark`}
+      className={`${inter.variable} ${ibmPlexMono.variable} ${jetbrainsMono.variable} ${pressStart2P.variable} ${yellowtail.variable} ${montserrat.variable} dark`}
     >
       <head>
         {/* Load Google Material Symbols for design icons */}

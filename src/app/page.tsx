@@ -32,10 +32,6 @@ export default async function Home() {
   };
 
   const nowBuilding = data?.nowBuilding || "Master Sentinel v1.0 · Code Shepherd · PC Lagbe";
-  const audio = data?.audio || {
-    nowPlaying: "Cyberpunk_2077_OST_Track_04.wav",
-    progress: 33
-  };
 
   const skills = data?.skills || [
     { "name": "PY", "equipped": true },
@@ -199,30 +195,6 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Side Channel / Audio */}
-        <section className="ruled-border bg-[#111111] p-4 flex items-center gap-6">
-          <div className="w-16 h-16 bg-background border border-outline-variant flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-brand-amber animate-pulse" style={{ fontSize: '32px' }}>graphic_eq</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-pixel-label font-pixel-label text-secondary mb-2 uppercase text-[10px]">NOW_PLAYING</p>
-            <p className="text-code-sm font-code-sm text-primary truncate">{audio.nowPlaying}</p>
-            <div className="w-full h-1 bg-surface-container-highest mt-2">
-              <div className="h-full bg-brand-amber" style={{ width: `${audio.progress}%` }}></div>
-            </div>
-          </div>
-          <div className="hidden sm:flex gap-2">
-            <button className="w-8 h-8 border border-outline-variant flex items-center justify-center hover:border-brand-amber hover:text-brand-amber transition-none text-secondary">
-              <span className="material-symbols-outlined text-sm">skip_previous</span>
-            </button>
-            <button className="w-8 h-8 border border-brand-amber bg-brand-amber text-background flex items-center justify-center transition-none font-bold">
-              <span className="material-symbols-outlined text-sm">play_arrow</span>
-            </button>
-            <button className="w-8 h-8 border border-outline-variant flex items-center justify-center hover:border-brand-amber hover:text-brand-amber transition-none text-secondary">
-              <span className="material-symbols-outlined text-sm">skip_next</span>
-            </button>
-          </div>
-        </section>
       </div>
     </div>
   );

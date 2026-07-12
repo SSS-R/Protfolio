@@ -1,6 +1,11 @@
 {
   "studio": "CreaTune",
-  "tagline": "Independent sound studio of Sultan Sajed Shahriar",
+  "tagline": "Independent sound studio. Original tracks, engineered end to end.",
+  "links": {
+    "soundcloud": "https://soundcloud.com",
+    "youtube": "https://youtube.com",
+    "album": ""
+  },
   "tracks": [
     {
       "id": "trk_demo_1",
@@ -8,7 +13,8 @@
       "artist": "CreaTune",
       "duration": "06:12",
       "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-      "plays": 0
+      "plays": 0,
+      "lyrics": "[ Instrumental — no lyrics ]"
     },
     {
       "id": "trk_demo_2",
@@ -16,7 +22,8 @@
       "artist": "CreaTune",
       "duration": "07:05",
       "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-      "plays": 0
+      "plays": 0,
+      "lyrics": "[ Instrumental — no lyrics ]"
     },
     {
       "id": "trk_demo_3",
@@ -24,7 +31,8 @@
       "artist": "CreaTune",
       "duration": "05:44",
       "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-      "plays": 0
+      "plays": 0,
+      "lyrics": "[ Instrumental — no lyrics ]"
     }
   ]
 }

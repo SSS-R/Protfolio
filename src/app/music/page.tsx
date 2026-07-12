@@ -6,7 +6,7 @@ import ClientCreaTune from '@/components/ClientCreaTune';
 
 export const metadata: Metadata = {
   title: 'CreaTune — Sound Studio',
-  description: 'CreaTune, the independent sound studio of Sultan Sajed Shahriar. Listen to original tracks.',
+  description: 'CreaTune — independent sound studio. Listen to original tracks.',
 };
 
 export const revalidate = 0;
@@ -29,7 +29,8 @@ export default async function MusicPage() {
   return (
     <ClientCreaTune
       studio={data?.studio || 'CreaTune'}
-      tagline={data?.tagline || 'Independent sound studio of Sultan Sajed Shahriar'}
+      tagline={data?.tagline || 'Independent sound studio.'}
+      links={data?.links || {}}
       initialTracks={data?.tracks || []}
     />
   );
