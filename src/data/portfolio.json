@@ -1,0 +1,193 @@
+{
+  "profile": {
+    "name": "SULTAN SAJED SHAHRIAR",
+    "avatar": "/images/developer_avatar.png",
+    "class": "SOFTWARE_ENGINEER",
+    "base": "DHAKA, BD",
+    "guild": "BRAC_UNIVERSITY",
+    "status": "READY_FOR_QUESTS",
+    "level": "LVL_99_DEV",
+    "intro": "Computer Engineering undergraduate at BRAC University, building full-stack systems and AI agent tooling. Currently researching quantum cryptography for my ongoing thesis, with a drive to contribute meaningfully to the defense of critical digital infrastructure."
+  },
+  "nowBuilding": "Master Sentinel v0.9.5 · Code Shepherd · PC Lagbe",
+  "audio": {
+    "nowPlaying": "Cyberpunk_2077_OST_Track_04.wav",
+    "progress": 33
+  },
+  "skills": [
+    { "name": "PY", "equipped": true },
+    { "name": "CPP", "equipped": true },
+    { "name": "JAVA", "equipped": true },
+    { "name": "JS", "equipped": true },
+    { "name": "C", "equipped": true },
+    { "name": "REACT", "equipped": true },
+    { "name": "NEXT", "equipped": true },
+    { "name": "FASTAPI", "equipped": true },
+    { "name": "TW", "equipped": true },
+    { "name": "GIT", "equipped": true },
+    { "name": "DOCKER", "equipped": true },
+    { "name": "REDIS", "equipped": false }
+  ],
+  "projects": [
+    {
+      "id": "master-sentinel",
+      "title": "Master Sentinel",
+      "subtitle": "V 0.9.5",
+      "desc": "Hardware diagnostics suite covering CPU, GPU, RAM, disk, and motherboard data. Real-time monitoring UI with a permissions transparency system.",
+      "tech": ["Python"],
+      "image": "/images/network_nodes.png",
+      "status": "BETA",
+      "category": "ACTIVE",
+      "link": "https://github.com/SSS-R/Master-Sentinal"
+    },
+    {
+      "id": "code-shepherd",
+      "title": "Code Shepherd",
+      "subtitle": "WIP",
+      "desc": "Cross-platform coordination system for developers running multiple AI agents. One control layer spanning CLI, web, and remote access.",
+      "tech": ["Python", "Next.js"],
+      "image": "/images/network_nodes.png",
+      "status": "IN PROGRESS",
+      "category": "ACTIVE",
+      "link": "https://github.com/SSS-R"
+    },
+    {
+      "id": "pc-lagbe",
+      "title": "PC Lagbe",
+      "subtitle": "CONCEPT",
+      "desc": "Solves PC part hunting friction across multiple vendors in Bangladesh. Powered by the Zenfa AI engine with knowledge of local inventory and vendor stock.",
+      "tech": ["AI", "BD Market"],
+      "image": "/images/pc_tower.png",
+      "status": "CONCEPT",
+      "category": "ACTIVE",
+      "link": "https://github.com/SSS-R"
+    },
+    {
+      "id": "zenfa-ai",
+      "title": "Zenfa AI",
+      "subtitle": "ENGINE",
+      "desc": "Dual-agent negotiation loop between a knapsack optimization engine and a Gemini Flash LLM, iterating until builds score 8.5+ on quality.",
+      "tech": ["Python", "Gemini"],
+      "image": "/images/network_nodes.png",
+      "status": "IN PROGRESS",
+      "category": "ACTIVE",
+      "link": "https://github.com/SSS-R"
+    },
+    {
+      "id": "pdf-tools",
+      "title": "PDF Tools — Split & Merge",
+      "subtitle": "LIVE",
+      "desc": "Fully client-side PDF processor built with pdf-lib — files never leave the device. Split by custom page ranges, merge up to 3 files. Deployed on GitHub Pages with CI/CD via GitHub Actions.",
+      "tech": ["React 19", "Vite 7"],
+      "image": "/images/pc_tower.png",
+      "status": "SHIPPED",
+      "category": "SHIPPED",
+      "link": "https://github.com/SSS-R/pdf-splitter"
+    },
+    {
+      "id": "wrestle-rumble",
+      "title": "Wrestle Rumble",
+      "subtitle": "LIVE",
+      "desc": "Full-stack monorepo with Next.js + Tailwind frontend and FastAPI + PostgreSQL backend. Card battle system with stat-based combat, rewards, trophies, and a live leaderboard.",
+      "tech": ["Next.js", "FastAPI", "PostgreSQL"],
+      "image": "/images/network_nodes.png",
+      "status": "SHIPPED",
+      "category": "SHIPPED",
+      "link": "https://sss-r.github.io/Wrestle-Rumble"
+    },
+    {
+      "id": "upi-fifa-paradox",
+      "title": "UPI — FIFA Paradox",
+      "subtitle": "RESEARCH",
+      "desc": "Unified Performance Index: multi-model football scoring pipeline combining Markov Chains, xG, xT, VAEP, and Discrete EPV over StatsBomb 360 freeze-frame data with Voronoi pitch control models.",
+      "tech": ["Python", "StatsBomb 360"],
+      "image": "/images/network_nodes.png",
+      "status": "SHIPPED",
+      "category": "SHIPPED",
+      "link": "https://github.com/SSS-R"
+    },
+    {
+      "id": "subway-surfer-3d",
+      "title": "Subway Surfer 3D",
+      "subtitle": "ENGINE",
+      "desc": "Complete 3D engine with perspective projection, dynamic camera, and real-time rendering. Three-lane navigation, gravity physics, procedural scenery, and progressive speed scaling.",
+      "tech": ["C++", "Graphics"],
+      "image": "/images/pc_tower.png",
+      "status": "SHIPPED",
+      "category": "SHIPPED",
+      "link": "https://github.com/SSS-R"
+    }
+  ],
+  "experience": [
+    {
+      "yearRange": "[ JUL 2025 - FEB 2026 ]",
+      "role": "Lead Developer",
+      "company": "Al-Mursalaat Online Academy (Remote)",
+      "bullets": [
+        "Developed web-based administration, student portals, and teacher directories",
+        "Architected full-stack solution with FastAPI backend and React/Next.js frontend",
+        "Configured Ubuntu server with Nginx reverse proxy for seamless API communication",
+        "Engineered secure authentication system via admin-controlled credential assignment"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "yearRange": "[ 2023 - PRESENT ]",
+      "institution": "BRAC University",
+      "degree": "B.Sc in Computer Engineering",
+      "bullets": [
+        "CGPA: 3.65 / 4.00",
+        "Thesis: Quantum Cryptography (ongoing)",
+        "Supervisor: Muhammad Iqbal Hossain"
+      ]
+    }
+  ],
+  "skillsAcquired": [
+    { "name": "Python", "level": 90 },
+    { "name": "JavaScript", "level": 80 },
+    { "name": "React / Next.js", "level": 85 },
+    { "name": "FastAPI", "level": 85 },
+    { "name": "C++", "level": 75 },
+    { "name": "Tailwind CSS", "level": 90 }
+  ],
+  "certifications": [
+    { "name": "Foundations of Cybersecurity", "issuer": "Google", "year": "2025" },
+    { "name": "Play it Safe: Manage Security Risks", "issuer": "Google", "year": "2025" },
+    { "name": "Connect and Protect: Networks and Network Security", "issuer": "Google", "year": "2025" },
+    { "name": "Introduction to Git and GitHub", "issuer": "Google", "year": "2024" },
+    { "name": "Python Data Structures", "issuer": "University of Michigan", "year": "2024" },
+    { "name": "Linear Algebra for ML and Data Science", "issuer": "DeepLearning.AI", "year": "2024" }
+  ],
+  "terminalCommands": [
+    { "command": "help", "response": "AVAILABLE COMMANDS:\n  /goto [home | cv | projects | contact]\n  /contact\n  /social\n  /whoami\n  /clear" },
+    { "command": "/whoami", "response": "SULTAN SAJED SHAHRIAR\nCOMPUTER ENGINEERING UNDERGRAD · FULL STACK DEV\nGUILD: BRAC UNIVERSITY\nBASE: DHAKA, BD" },
+    { "command": "/contact", "response": "EMAIL: SULTAN.TXT.OFFICIAL@GMAIL.COM\nLOCATION: DHAKA, BD" },
+    { "command": "/social", "response": "GITHUB: github.com/SSS-R\nLINKEDIN: linkedin.com/in/sultan-sajed-shahriar-a71478288" }
+  ],
+  "about": {
+    "biography": "Sultan Sajed Shahriar is a Computer Engineering undergraduate at BRAC University and a full-stack developer based in Dhaka, Bangladesh. As Lead Developer at Al-Mursalaat Online Academy he architected and shipped a complete FastAPI + Next.js platform, from Ubuntu server configuration to secure authentication. His ongoing thesis explores quantum cryptography, and his engineering interests span cyber security, AI agent orchestration, and system design.",
+    "aims": "To complete thesis research in quantum cryptography, ship Master Sentinel v1.0, and grow into security-focused systems engineering where AI tooling meets defense of critical infrastructure.",
+    "interests": [
+      "Cyber Security & Network Defense",
+      "Quantum Cryptography",
+      "AI Agent Orchestration & Context Engineering",
+      "Full-Stack Web Development",
+      "System Architecture & Database Design"
+    ]
+  },
+  "tracks": [
+    { "id": "track-1", "title": "NEON_SHADOWS.mp3", "duration": "06:12", "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+    { "id": "track-2", "title": "CYBERNETIC_QUEST.mp3", "duration": "07:05", "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+    { "id": "track-3", "title": "QUANTUM_SHIELD.mp3", "duration": "05:44", "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
+  ],
+  "roadmap": [
+    { "id": "node-1", "title": "Enrolled at BRAC University", "description": "Started B.Sc in Computer Engineering.", "type": "education", "status": "completed", "year": "2023" },
+    { "id": "node-2", "title": "Google & Coursera Certifications", "description": "Completed cybersecurity, Git, Python, and linear algebra certificates.", "type": "education", "status": "completed", "year": "2024" },
+    { "id": "node-3", "title": "Lead Developer at Al-Mursalaat", "description": "Built and shipped the academy's full-stack platform end to end.", "type": "career", "status": "completed", "year": "2025" },
+    { "id": "node-4", "title": "IBM Qiskit Global Summer School", "description": "Selected for the global program on quantum computing and Qiskit.", "type": "education", "status": "completed", "year": "2025" },
+    { "id": "node-5", "title": "Master Sentinel v1.0", "description": "Driving the hardware diagnostics suite from beta to stable release.", "type": "aim", "status": "active", "year": "2026" },
+    { "id": "node-6", "title": "Quantum Cryptography Thesis", "description": "Ongoing thesis research under Muhammad Iqbal Hossain.", "type": "education", "status": "active", "year": "2026" },
+    { "id": "node-7", "title": "Security Systems Engineering", "description": "Post-graduation focus: quantum-resistant cryptography and infrastructure defense.", "type": "aim", "status": "locked", "year": "Future" }
+  ]
+}

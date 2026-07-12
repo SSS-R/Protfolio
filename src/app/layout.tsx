@@ -1,0 +1,104 @@
+import type { Metadata } from 'next';
+import { Inter, IBM_Plex_Mono, JetBrains_Mono, Press_Start_2P } from 'next/font/google';
+import fs from 'fs/promises';
+import path from 'path';
+import './globals.css';
+import ClientLayout from '@/components/ClientLayout';
+
+// Font configuration using next/font/google
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  weight: ['400', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-ibm-plex-mono',
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
+});
+
+const pressStart2P = Press_Start_2P({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-press-start-2p',
+  display: 'swap',
+});
+
+export const metadata: Metadata = {
+  title: 'SULTAN SAJED SHAHRIAR | PORTFOLIO',
+  description: 'CS Student · Freelance Web Dev · AI Systems Builder. Swiss Modernism meets Cyberpunk Terminal interface.',
+  icons: {
+    icon: '/favicon.ico',
+  },
+  openGraph: {
+    title: 'SULTAN SAJED SHAHRIAR | PORTFOLIO',
+    description: 'CS Student · Freelance Web Dev · AI Systems Builder. Swiss Modernism meets Cyberpunk Terminal interface.',
+    type: 'website',
+    images: [
+      {
+        url: '/images/developer_avatar.png',
+        width: 512,
+        height: 512,
+        alt: 'Pixel art avatar of Sultan Sajed Shahriar at a retro computer',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'SULTAN SAJED SHAHRIAR | PORTFOLIO',
+    description: 'CS Student · Freelance Web Dev · AI Systems Builder.',
+    images: ['/images/developer_avatar.png'],
+  },
+};
+
+// Force dynamic rendering to load fresh portfolio data updates
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
+
+async function getPortfolioData() {
+  try {
+    const filePath = path.join(process.cwd(), 'src/data/portfolio.json');
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileContent);
+  } catch (error) {
+    console.error('Failed to read portfolio data:', error);
+    return null;
+  }
+}
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const data = await getPortfolioData();
+
+  return (
+    <html 
+      lang="en" 
+      className={`${inter.variable} ${ibmPlexMono.variable} ${jetbrainsMono.variable} ${pressStart2P.variable} dark`}
+    >
+      <head>
+        {/* Load Google Material Symbols for design icons */}
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" 
+          rel="stylesheet"
+        />
+      </head>
+      <body className="bg-background text-on-background selection:bg-brand-amber selection:text-background min-h-screen antialiased">
+        <ClientLayout portfolioData={data}>
+          {children}
+        </ClientLayout>
+      </body>
+    </html>
+  );
+}

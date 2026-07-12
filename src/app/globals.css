@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors from design system */
+  --color-background: #0A0A0A;
+  --color-on-background: #e5e2e1;
+  --color-surface: #141313;
+  --color-on-surface: #e5e2e1;
+  --color-surface-variant: #353434;
+  --color-on-surface-variant: #c4c7c8;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-container: #201f1f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #353434;
+  --color-outline-variant: #444748;
+  --color-outline: #8e9192;
+  --color-primary: #ffffff;
+  --color-on-primary: #2f3131;
+  --color-primary-container: #e2e2e2;
+  --color-secondary: #c7c6c6;
+  --color-on-secondary: #303031;
+  --color-secondary-container: #464747;
+  --color-on-secondary-container: #b5b5b5;
+  --color-brand-amber: #F5A623;
+  --color-brand-amber-dim: rgba(245, 166, 35, 0.2);
+  --color-brand-dark: #0A0A0A;
+  --color-brand-ruled: #333333;
+  --color-brand-border: #F0F0F0;
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+  --color-on-tertiary-fixed: #1f1b19;
+  --color-tertiary-fixed: #eae1dd;
+
+  /* Font definitions mapping to CSS variables configured in layout.tsx */
+  --font-inter: var(--font-inter);
+  --font-ibm-plex-mono: var(--font-ibm-plex-mono);
+  --font-jetbrains-mono: var(--font-jetbrains-mono);
+  --font-press-start-2p: var(--font-press-start-2p);
+
+  /* Specific design font aliases */
+  --font-sans: var(--font-inter), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+  --font-headline-xl: var(--font-ibm-plex-mono), monospace;
+  --font-body-md: var(--font-inter), sans-serif;
+  --font-headline-md: var(--font-ibm-plex-mono), monospace;
+  --font-body-lg: var(--font-inter), sans-serif;
+  --font-pixel-label: var(--font-press-start-2p), cursive;
+  --font-headline-xl-mobile: var(--font-ibm-plex-mono), monospace;
+  --font-headline-lg: var(--font-ibm-plex-mono), monospace;
+  --font-code-sm: var(--font-jetbrains-mono), monospace;
+
+  /* Zero rounded corners for brutalist feel */
+  --radius-default: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-full: 0px;
+}
+
+/* Custom CSS global defaults */
+body {
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+  font-family: var(--font-body-md);
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom design utilities */
+.ruled-border {
+  border: 1px solid var(--color-brand-ruled);
+}
+
+.blinking-cursor::after {
+  content: '_';
+  animation: blink 1s step-end infinite;
+  color: var(--color-brand-amber);
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.btn-brutal, .btn-brutalist {
+  border: 1px solid var(--color-brand-border);
+  color: var(--color-brand-border);
+  background: transparent;
+  transition: none;
+  font-family: var(--font-code-sm);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn-brutal:hover, .btn-brutalist:hover {
+  background-color: var(--color-brand-amber);
+  color: var(--color-background);
+  border-color: var(--color-brand-amber);
+}
+
+/* Marquee for arcade footer */
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee-content {
+  display: inline-block;
+  animation: marquee 20s linear infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* CRT overlay and scanline animations */
+.scanline {
+  width: 100%;
+  height: 100px;
+  z-index: 50;
+  position: fixed;
+  pointer-events: none;
+  background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0) 100%);
+  opacity: 0.1;
+  animation: scanlineAnimation 8s linear infinite;
+}
+
+@keyframes scanlineAnimation {
+  0% { transform: translateY(-100vh); }
+  100% { transform: translateY(100vh); }
+}
+
+.scanline-wipe {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  background: rgba(245, 166, 35, 0.5);
+  box-shadow: 0 0 20px rgba(245, 166, 35, 0.8);
+  z-index: 9999;
+  animation: scanwipe 3s linear forwards;
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes scanwipe {
+  0% { top: 0; opacity: 1; }
+  90% { top: 100%; opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* Respect users who prefer less motion: stop decorative animations,
+   keep the marquee text readable in place */
+@media (prefers-reduced-motion: reduce) {
+  .blinking-cursor::after,
+  .marquee-content,
+  .scanline,
+  .scanline-wipe {
+    animation: none;
+  }
+
+  .scanline,
+  .scanline-wipe {
+    display: none;
+  }
+
+  .marquee-content {
+    transform: none;
+  }
+}
+
+.crt-overlay {
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  opacity: 0.3;
+}
+
+.watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  font-size: 15vw;
+  color: rgba(255, 255, 255, 0.015);
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-weight: 700;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 0;
+  user-select: none;
+}
+
+.grid-bg {
+  background-size: 40px 40px;
+  background-image: 
+      linear-gradient(to right, #333333 1px, transparent 1px),
+      linear-gradient(to bottom, #333333 1px, transparent 1px);
+  background-position: center top;
+}
+
+.card-inner {
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.group-hover-rotateY-180:hover .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
