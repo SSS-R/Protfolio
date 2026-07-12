@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCurtain } from './ClientLayout';
 
 export interface CreaTuneTrack {
@@ -172,8 +173,15 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
       {/* Top bar */}
       <header className="border-b border-[#262838] sticky top-0 bg-[#0C0D13]/95 backdrop-blur-sm z-40">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
-          <span className="text-2xl font-[family-name:var(--font-script)] text-[#EDEBF4]">
-            {studio}
+          <span className="flex items-center gap-3">
+            <Image
+              src="/images/creatune-logo.png"
+              alt=""
+              width={40}
+              height={40}
+              className="rounded-full border border-[#3B3E52]"
+            />
+            <span className="text-2xl font-[family-name:var(--font-script)] text-[#EDEBF4]">{studio}</span>
           </span>
           <nav className="flex items-center gap-2 md:gap-5 text-[11px] font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-display)]">
             {socialLinks.map(({ label, href, icon: Icon }) => (
@@ -227,15 +235,19 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             ))}
           </div>
 
-          {/* Ring logo mark (signature-in-a-circle, like the avatar) */}
-          <div
-            className="hidden md:flex absolute top-10 right-10 w-28 h-28 rounded-full border border-[#EDEBF4]/30 items-center justify-center rotate-[-8deg] pointer-events-none"
-            aria-hidden="true"
-          >
-            <span className="font-[family-name:var(--font-script)] text-3xl text-[#EDEBF4]/75">{studio}</span>
-          </div>
-
-          <div className="max-w-6xl mx-auto px-5 md:px-8 pt-28 md:pt-36 pb-28 relative">
+          {/* The main circular logo, floating over the waveform */}
+          <div className="max-w-6xl mx-auto px-5 md:px-8 pt-20 md:pt-24 pb-24 relative">
+            <div className="flex justify-center mb-10">
+              <Image
+                src="/images/creatune-logo.png"
+                alt="CreaTune logo — signature in a circle"
+                width={128}
+                height={128}
+                priority
+                className="rounded-full border border-[#EDEBF4]/20"
+                style={{ boxShadow: '0 0 50px rgba(169,163,206,0.35), 0 0 110px rgba(201,169,192,0.18)' }}
+              />
+            </div>
             <h1
               className="text-center font-[family-name:var(--font-display)] font-semibold uppercase text-[9vw] md:text-6xl lg:text-7xl tracking-[0.4em] md:tracking-[0.5em] -mr-[0.4em] leading-none"
               style={{ textShadow: '0 0 36px rgba(169,163,206,0.35), 0 0 90px rgba(201,169,192,0.18)' }}
@@ -292,6 +304,17 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
           </div>
         </section>
 
+        {/* Brand banner strip */}
+        <section className="border-b border-[#262838] bg-[#0C0D13]" aria-hidden="true">
+          <Image
+            src="/images/creatune-banner.png"
+            alt=""
+            width={1707}
+            height={282}
+            className="w-full h-auto opacity-90"
+          />
+        </section>
+
         {/* Track list */}
         <section className="max-w-6xl mx-auto px-5 md:px-8 mt-12">
           <div className="flex items-baseline justify-between border-b-2 border-[#EDEBF4] pb-3">
@@ -344,7 +367,13 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
         {/* Footer note */}
         <section className="max-w-6xl mx-auto px-5 md:px-8 mt-16 text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4] flex flex-col md:flex-row justify-between gap-2 font-[family-name:var(--font-display)]">
           <span>© 2026 {studio} — All sound, one desk.</span>
-          <span className="font-[family-name:var(--font-script)] normal-case tracking-normal text-base text-[#EDEBF4]/60">{studio}</span>
+          <Image
+            src="/images/creatune-logo.png"
+            alt=""
+            width={32}
+            height={32}
+            className="rounded-full border border-[#3B3E52] opacity-80"
+          />
         </section>
       </main>
 

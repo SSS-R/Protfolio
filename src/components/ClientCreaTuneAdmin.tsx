@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { CreaTuneTrack } from './ClientCreaTune';
 
 function getStoredPassword() {
@@ -165,10 +166,19 @@ export default function ClientCreaTuneAdmin() {
       {/* Top bar */}
       <header className="border-b border-[#262838] sticky top-0 bg-[#0C0D13]/95 backdrop-blur-sm z-40">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
-          <span className="text-2xl font-[family-name:var(--font-script)]">
-            CreaTune
-            <span className="font-[family-name:var(--font-inter)] text-xs font-bold uppercase tracking-[0.25em] ml-3 text-[#A9A3CE] align-middle">
-              Studio Admin
+          <span className="flex items-center gap-3">
+            <Image
+              src="/images/creatune-logo.png"
+              alt=""
+              width={36}
+              height={36}
+              className="rounded-full border border-[#3B3E52]"
+            />
+            <span className="text-2xl font-[family-name:var(--font-script)]">
+              CreaTune
+              <span className="font-[family-name:var(--font-inter)] text-xs font-bold uppercase tracking-[0.25em] ml-3 text-[#A9A3CE] align-middle">
+                Studio Admin
+              </span>
             </span>
           </span>
           <Link

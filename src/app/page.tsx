@@ -85,13 +85,18 @@ export default async function Home() {
             </div>
             <div className="md:col-span-4 flex justify-center md:justify-end">
               <div className="w-48 h-48 ruled-border bg-[#111111] relative overflow-hidden flex items-center justify-center">
-                <Image 
-                  alt="Developer Avatar" 
-                  src={profile.avatar}
-                  width={192}
-                  height={192}
-                  className="object-cover pixelated"
-                />
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  poster={profile.avatar}
+                  aria-label="Animated developer avatar typing at a retro computer"
+                  className="object-cover w-full h-full"
+                >
+                  <source src="/videos/hero-loop.mp4" type="video/mp4" />
+                </video>
               </div>
             </div>
           </div>
