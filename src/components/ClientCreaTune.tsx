@@ -4,28 +4,18 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCurtain } from './ClientLayout';
+import type { CreaTuneTrack, CreaTuneAlbum, CreaTuneLinks } from './creatune-types';
 
-export interface CreaTuneTrack {
-  id: string;
-  title: string;
-  artist: string;
-  duration: string;
-  url: string;
-  plays: number;
-  lyrics?: string;
-}
+export type { CreaTuneTrack, CreaTuneAlbum, CreaTuneLinks };
 
-export interface CreaTuneLinks {
-  soundcloud?: string;
-  youtube?: string;
-  album?: string;
-}
+const LOGO_FALLBACK = '/images/creatune-logo.png';
 
 interface ClientCreaTuneProps {
   studio: string;
   tagline: string;
   links: CreaTuneLinks;
   initialTracks: CreaTuneTrack[];
+  albums?: CreaTuneAlbum[];
 }
 
 /* Palette lifted from the CreaTune logos:
@@ -83,9 +73,20 @@ const AlbumIcon = ({ className = 'w-4 h-4' }: { className?: string }) => (
   </svg>
 );
 
-export default function ClientCreaTune({ studio, tagline, links, initialTracks }: ClientCreaTuneProps) {
+export default function ClientCreaTune({ studio, tagline, links, initialTracks, albums = [] }: ClientCreaTuneProps) {
   const { navigateWithCurtain } = useCurtain();
   const [tracks, setTracks] = useState<CreaTuneTrack[]>(initialTracks);
+
+  // Cover resolution: track's own cover → its album's cover → studio logo
+  const coverFor = useCallback(
+    (track: CreaTuneTrack | null | undefined): string => {
+      if (!track) return LOGO_FALLBACK;
+      if (track.cover) return track.cover;
+      const album = albums.find((a) => a.id === track.albumId);
+      return album?.cover || LOGO_FALLBACK;
+    },
+    [albums]
+  );
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -406,11 +407,11 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             {/* Latest release feature card */}
             <div className="md:col-span-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex items-center gap-4 md:gap-5">
               <Image
-                src="/images/creatune-logo.png"
+                src={coverFor(tracks[tracks.length - 1])}
                 alt=""
                 width={72}
                 height={72}
-                className="rounded-[14px] border border-white/10 shrink-0 w-14 h-14 md:w-[72px] md:h-[72px]"
+                className="rounded-[14px] border border-white/10 shrink-0 w-14 h-14 md:w-[72px] md:h-[72px] object-cover"
               />
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0] font-[family-name:var(--font-display)]">
@@ -500,11 +501,11 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
                       )}
                       <span className="min-w-0 flex items-center gap-3 md:gap-4">
                         <Image
-                          src="/images/creatune-logo.png"
+                          src={coverFor(track)}
                           alt=""
                           width={44}
                           height={44}
-                          className={`rounded-[10px] border shrink-0 ${isCurrent ? 'border-[#A9A3CE]/60' : 'border-white/10'}`}
+                          className={`rounded-[10px] border shrink-0 w-11 h-11 object-cover ${isCurrent ? 'border-[#A9A3CE]/60' : 'border-white/10'}`}
                         />
                         <span className="min-w-0">
                           <span className="block text-base md:text-xl font-bold tracking-tight truncate">{track.title}</span>
@@ -581,11 +582,11 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             {/* Left: cover art + track meta */}
             <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-[28%]">
               <Image
-                src="/images/creatune-logo.png"
+                src={coverFor(currentTrack)}
                 alt=""
                 width={44}
                 height={44}
-                className="rounded-[10px] border border-white/10 shrink-0"
+                className="rounded-[10px] border border-white/10 shrink-0 w-11 h-11 object-cover"
               />
               <div className="min-w-0">
                 <p className="text-sm font-bold truncate">{currentTrack ? currentTrack.title : '—'}</p>

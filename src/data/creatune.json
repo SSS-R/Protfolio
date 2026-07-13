@@ -6,6 +6,7 @@
     "youtube": "https://www.youtube.com/@CreaTune-0fficial",
     "album": ""
   },
+  "albums": [],
   "tracks": [
     {
       "id": "trk_1783890011712_uvpmzp",
@@ -13,7 +14,7 @@
       "artist": "CreaTune",
       "duration": "03:45",
       "url": "/uploads/1783890011360_Echoes_of_Tomorrow.mp3",
-      "plays": 2,
+      "plays": 7,
       "lyrics": ""
     },
     {
@@ -22,7 +23,7 @@
       "artist": "CreaTune",
       "duration": "03:44",
       "url": "/uploads/1783890027733_Fading_Echoes.mp3",
-      "plays": 0,
+      "plays": 1,
       "lyrics": ""
     },
     {
@@ -31,7 +32,7 @@
       "artist": "CreaTune",
       "duration": "03:49",
       "url": "/uploads/1783890060122_t_s_just_me_again.mp3",
-      "plays": 2,
+      "plays": 5,
       "lyrics": ""
     }
   ]

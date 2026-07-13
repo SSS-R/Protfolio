@@ -8,7 +8,7 @@ interface CreaTuneData {
   studio: string;
   tagline: string;
   links?: Record<string, string>;
-  albums: unknown[];
+  albums: Record<string, unknown>[];
   tracks: Record<string, unknown>[];
 }
 
@@ -39,82 +39,68 @@ function checkAuth(request: Request): NextResponse | null {
   return null;
 }
 
-// GET /api/creatune - Public catalogue (tracks + albums)
-export async function GET() {
-  const data = await readData();
-  return NextResponse.json(data);
-}
-
-// POST /api/creatune - Add a track (Admin only)
+// POST /api/creatune/album - Create an album (Admin only)
 export async function POST(request: Request) {
   const authError = checkAuth(request);
   if (authError) return authError;
 
   try {
     const body = await request.json();
-    const { title, artist, duration, url, lyrics, cover, albumId } = body;
+    const { title, year, cover } = body;
 
-    if (!title || !url) {
-      return NextResponse.json({ error: 'Title and audio URL are required' }, { status: 400 });
+    if (!title || !title.trim()) {
+      return NextResponse.json({ error: 'Album title is required' }, { status: 400 });
     }
 
     const data = await readData();
-    const newTrack = {
-      id: `trk_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-      title,
-      artist: artist || 'CreaTune',
-      duration: duration || '--:--',
-      url,
-      plays: 0,
-      lyrics: typeof lyrics === 'string' ? lyrics : '',
+    const newAlbum = {
+      id: `alb_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+      title: title.trim(),
+      year: typeof year === 'string' ? year.trim() : '',
       cover: typeof cover === 'string' ? cover : '',
-      albumId: typeof albumId === 'string' ? albumId : '',
     };
-    data.tracks.push(newTrack);
+    data.albums.push(newAlbum);
     await writeData(data);
 
-    return NextResponse.json({ success: true, track: newTrack });
+    return NextResponse.json({ success: true, album: newAlbum });
   } catch (error) {
-    console.error('Error adding track:', error);
-    return NextResponse.json({ error: 'Failed to add track' }, { status: 500 });
+    console.error('Error creating album:', error);
+    return NextResponse.json({ error: 'Failed to create album' }, { status: 500 });
   }
 }
 
-// PATCH /api/creatune - Edit a track's metadata (Admin only)
+// PATCH /api/creatune/album - Edit an album (Admin only)
 export async function PATCH(request: Request) {
   const authError = checkAuth(request);
   if (authError) return authError;
 
   try {
     const body = await request.json();
-    const { id, title, artist, lyrics, cover, albumId } = body;
+    const { id, title, year, cover } = body;
 
     if (!id) {
-      return NextResponse.json({ error: 'Track ID required' }, { status: 400 });
+      return NextResponse.json({ error: 'Album ID required' }, { status: 400 });
     }
 
     const data = await readData();
-    const track = data.tracks.find((t) => t.id === id);
-    if (!track) {
-      return NextResponse.json({ error: 'Track not found' }, { status: 404 });
+    const album = data.albums.find((a) => a.id === id);
+    if (!album) {
+      return NextResponse.json({ error: 'Album not found' }, { status: 404 });
     }
 
-    // Only overwrite fields that were actually provided
-    if (typeof title === 'string' && title.trim()) track.title = title.trim();
-    if (typeof artist === 'string') track.artist = artist.trim() || 'CreaTune';
-    if (typeof lyrics === 'string') track.lyrics = lyrics;
-    if (typeof cover === 'string') track.cover = cover;
-    if (typeof albumId === 'string') track.albumId = albumId;
+    if (typeof title === 'string' && title.trim()) album.title = title.trim();
+    if (typeof year === 'string') album.year = year.trim();
+    if (typeof cover === 'string') album.cover = cover;
 
     await writeData(data);
-    return NextResponse.json({ success: true, track });
+    return NextResponse.json({ success: true, album });
   } catch (error) {
-    console.error('Error editing track:', error);
-    return NextResponse.json({ error: 'Failed to edit track' }, { status: 500 });
+    console.error('Error editing album:', error);
+    return NextResponse.json({ error: 'Failed to edit album' }, { status: 500 });
   }
 }
 
-// DELETE /api/creatune?id=... - Remove a track (Admin only)
+// DELETE /api/creatune/album?id=... - Delete an album; orphaned tracks are unassigned
 export async function DELETE(request: Request) {
   const authError = checkAuth(request);
   if (authError) return authError;
@@ -123,15 +109,19 @@ export async function DELETE(request: Request) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) {
-      return NextResponse.json({ error: 'Track ID required' }, { status: 400 });
+      return NextResponse.json({ error: 'Album ID required' }, { status: 400 });
     }
 
     const data = await readData();
-    data.tracks = data.tracks.filter((t) => t.id !== id);
+    data.albums = data.albums.filter((a) => a.id !== id);
+    // Detach tracks that pointed at the deleted album (tracks are never deleted here)
+    data.tracks.forEach((t) => {
+      if (t.albumId === id) t.albumId = '';
+    });
     await writeData(data);
 
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: 'Failed to delete track' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to delete album' }, { status: 500 });
   }
 }

@@ -32,6 +32,7 @@ export default async function MusicPage() {
       tagline={data?.tagline || 'Independent sound studio.'}
       links={data?.links || {}}
       initialTracks={data?.tracks || []}
+      albums={data?.albums || []}
     />
   );
 }
