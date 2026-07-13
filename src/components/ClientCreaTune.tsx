@@ -169,9 +169,22 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
   ].filter((l) => l.href);
 
   return (
-    <div className="ct-scope min-h-screen bg-[#0C0D13] text-[#EDEBF4] font-[family-name:var(--font-inter)] selection:bg-[#A9A3CE] selection:text-[#0C0D13] flex flex-col">
+    <div className="ct-scope relative min-h-screen bg-black text-[#EDEBF4] font-[family-name:var(--font-inter)] selection:bg-[#A9A3CE] selection:text-black flex flex-col">
+      {/* Ambient blue/purple glow over solid black */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(65% 45% at 50% -5%, rgba(124,92,255,0.22), transparent 70%),' +
+            'radial-gradient(45% 40% at 8% 25%, rgba(59,74,214,0.16), transparent 70%),' +
+            'radial-gradient(50% 45% at 92% 70%, rgba(169,163,206,0.14), transparent 70%),' +
+            'radial-gradient(40% 40% at 50% 110%, rgba(124,92,255,0.12), transparent 70%)',
+        }}
+        aria-hidden="true"
+      />
+
       {/* Top bar */}
-      <header className="border-b border-[#262838] sticky top-0 bg-[#0C0D13]/95 backdrop-blur-sm z-40">
+      <header className="relative z-40 border-b border-[#1C1D2A] sticky top-0 bg-black/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
           <span className="flex items-center gap-3">
             <Image
@@ -213,9 +226,9 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
         </div>
       </header>
 
-      <main className="flex-1 w-full pb-44">
+      <main className="relative z-10 flex-1 w-full pb-44">
         {/* ============ HERO ============ */}
-        <section className="relative overflow-hidden border-b border-[#262838] bg-[radial-gradient(120%_90%_at_50%_0%,#191b2a_0%,#0C0D13_60%)]">
+        <section className="relative overflow-hidden border-b border-[#1C1D2A]">
           {/* Waveform, anchored to the baseline like a real signal */}
           <div
             className="absolute inset-x-0 bottom-0 h-64 flex items-end gap-[3px] px-2 pointer-events-none blur-2xl"
@@ -234,7 +247,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             ))}
           </div>
           {/* Fade the waveform into the ink so it never fights the text */}
-          <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#0C0D13] via-transparent to-transparent pointer-events-none" aria-hidden="true"></div>
+          <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none" aria-hidden="true"></div>
 
           <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-36 md:pb-44 relative flex flex-col items-center">
             {/* Main circular logo */}
@@ -288,7 +301,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
 
         {/* ============ STUDIO STRIP ============ */}
         <section className="max-w-6xl mx-auto px-5 md:px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-[#262838] bg-[#101119] p-6">
+          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">
               Listen elsewhere
             </p>
@@ -313,7 +326,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             </div>
           </div>
 
-          <div className="rounded-2xl border border-[#262838] bg-[#101119] p-6">
+          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Catalogue</p>
             <p className="mt-3 text-5xl font-[family-name:var(--font-display)] font-bold tracking-tight tabular-nums text-[#A9A3CE]">
               {tracks.length.toString().padStart(2, '0')}
@@ -323,7 +336,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[#262838] bg-[#101119] p-6 flex flex-col">
+          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-6 flex flex-col">
             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Signal</p>
             <div className="flex-1 min-h-20 mt-4 text-[#A9A3CE]">
               <div className={`ct-eq ${isPlaying ? '' : 'ct-eq-paused'}`} aria-hidden="true">
@@ -353,7 +366,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
                     <button
                       onClick={() => playTrack(index)}
                       className={`w-full grid grid-cols-[2.5rem_1fr_auto] md:grid-cols-[4rem_1fr_8rem_5rem_3rem] items-center gap-3 md:gap-6 py-5 text-left group transition-colors duration-200 cursor-pointer px-4 -mx-4 rounded-xl ${
-                        isCurrent ? 'bg-[#14121F]' : 'hover:bg-[#101119]'
+                        isCurrent ? 'bg-[#7C5CFF]/[0.10] ring-1 ring-[#7C5CFF]/25' : 'hover:bg-white/[0.03]'
                       }`}
                     >
                       <span
@@ -389,20 +402,8 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
           )}
         </section>
 
-        {/* ============ BRAND BAND (banner artwork) ============ */}
-        <section className="mt-20 border-y border-[#262838] relative" aria-hidden="true">
-          <Image
-            src="/images/creatune-banner.png"
-            alt=""
-            width={1707}
-            height={282}
-            className="w-full h-auto"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0C0D13] via-transparent to-[#0C0D13] pointer-events-none"></div>
-        </section>
-
         {/* Footer note */}
-        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-10 text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4] flex items-center justify-between gap-2 font-[family-name:var(--font-display)]">
+        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-20 pt-8 border-t border-[#1C1D2A] text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4] flex items-center justify-between gap-2 font-[family-name:var(--font-display)]">
           <span>© 2026 {studio} — All sound, one desk.</span>
           <Image
             src="/images/creatune-logo.png"
@@ -416,7 +417,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
 
       {/* Lyrics panel */}
       {showLyrics && (
-        <div className="fixed bottom-[76px] left-0 right-0 z-40 border-t border-[#262838] bg-[#101119]/97 backdrop-blur-sm">
+        <div className="fixed bottom-[76px] left-0 right-0 z-40 border-t border-[#1C1D2A] bg-black/90 backdrop-blur-md">
           <div className="max-w-6xl mx-auto px-5 md:px-8 py-5 max-h-[40vh] overflow-y-auto">
             <div className="flex items-baseline justify-between border-b border-[#262838] pb-2">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#C9A9C0] font-[family-name:var(--font-display)]">Lyrics</p>
@@ -434,7 +435,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
       )}
 
       {/* Player bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#101119]/97 backdrop-blur-sm border-t border-[#262838] z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-[#1C1D2A] z-40">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-3 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-4">
           {/* Now playing */}
           <div className="min-w-0">

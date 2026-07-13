@@ -162,9 +162,19 @@ export default function ClientCreaTuneAdmin() {
   const labelClass = 'text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4]';
 
   return (
-    <div className="ct-scope min-h-screen bg-[#0C0D13] text-[#EDEBF4] font-[family-name:var(--font-inter)] selection:bg-[#A9A3CE] selection:text-[#0C0D13]">
+    <div className="ct-scope relative min-h-screen bg-black text-[#EDEBF4] font-[family-name:var(--font-inter)] selection:bg-[#A9A3CE] selection:text-black">
+      {/* Ambient blue/purple glow over solid black */}
+      <div
+        className="fixed inset-0 z-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(60% 45% at 50% -5%, rgba(124,92,255,0.18), transparent 70%),' +
+            'radial-gradient(45% 40% at 92% 60%, rgba(59,74,214,0.12), transparent 70%)',
+        }}
+        aria-hidden="true"
+      />
       {/* Top bar */}
-      <header className="border-b border-[#262838] sticky top-0 bg-[#0C0D13]/95 backdrop-blur-sm z-40">
+      <header className="relative z-40 border-b border-[#1C1D2A] sticky top-0 bg-black/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
           <span className="flex items-center gap-3">
             <Image
@@ -190,7 +200,7 @@ export default function ClientCreaTuneAdmin() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-5 md:px-8 py-12">
+      <main className="relative z-10 max-w-6xl mx-auto px-5 md:px-8 py-12">
         {!isAuthenticated ? (
           <div className="max-w-md mx-auto mt-16 border border-[#262838] p-8 bg-[#101119]">
             <h1 className="text-2xl font-extrabold tracking-tight">Studio access</h1>
