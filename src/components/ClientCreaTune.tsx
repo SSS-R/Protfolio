@@ -205,17 +205,17 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
       {/* Top bar */}
       <header className="relative z-40 border-b border-[#1C1D2A] sticky top-0 bg-black/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
-          <span className="flex items-center gap-3">
+          <span className="flex items-center gap-3 min-w-0">
             <Image
               src="/images/creatune-logo.png"
               alt=""
               width={40}
               height={40}
-              className="rounded-full border border-[#3B3E52]"
+              className="rounded-full border border-[#3B3E52] shrink-0"
             />
-            <span className="text-2xl font-[family-name:var(--font-script)] text-[#EDEBF4]">{studio}</span>
+            <span className="hidden sm:inline text-2xl font-[family-name:var(--font-script)] text-[#EDEBF4]">{studio}</span>
           </span>
-          <nav className="flex items-center gap-2 md:gap-5 text-[11px] font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-display)]">
+          <nav className="flex items-center gap-3 md:gap-5 text-[11px] font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-display)] shrink-0">
             {socialLinks.map(({ label, href, icon: Icon }) => (
               <a
                 key={label}
@@ -237,7 +237,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
                 e.preventDefault();
                 navigateWithCurtain('/');
               }}
-              className="rounded-full border border-[#3B3E52] px-4 py-2 hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200"
+              className="rounded-full border border-[#3B3E52] px-3 py-1.5 md:px-4 md:py-2 hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200 whitespace-nowrap"
             >
               ← Portfolio
             </Link>
