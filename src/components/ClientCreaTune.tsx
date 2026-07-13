@@ -318,54 +318,64 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
           </div>
         </section>
 
-        {/* ============ STUDIO STRIP ============ */}
-        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">
-              Listen elsewhere
-            </p>
-            <div className="mt-4 flex flex-col gap-3">
-              {socialLinks.length > 0 ? (
-                socialLinks.map(({ label, href, icon: Icon }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 text-sm font-bold hover:text-[#C9A9C0] transition-colors duration-200"
-                  >
-                    <Icon className="w-5 h-5" />
-                    {label}
-                    <span className="ml-auto text-[#3B3E52]">↗</span>
-                  </a>
-                ))
-              ) : (
-                <p className="text-sm text-[#9BA0B4]">Links coming soon.</p>
-              )}
+        {/* ============ STUDIO STRIP: latest release + catalogue/signal ============ */}
+        {tracks.length > 0 && (
+          <section className="max-w-6xl mx-auto px-5 md:px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Latest release feature card */}
+            <div className="md:col-span-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex items-center gap-4 md:gap-5">
+              <Image
+                src="/images/creatune-logo.png"
+                alt=""
+                width={72}
+                height={72}
+                className="rounded-[14px] border border-white/10 shrink-0 w-14 h-14 md:w-[72px] md:h-[72px]"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0] font-[family-name:var(--font-display)]">
+                  Latest release
+                </p>
+                <p className="mt-1 text-lg md:text-2xl font-bold tracking-tight truncate">
+                  {tracks[tracks.length - 1].title}
+                </p>
+                <p className="text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4] mt-0.5 truncate">
+                  {tracks[tracks.length - 1].artist} · {tracks[tracks.length - 1].plays.toLocaleString()} listens ·{' '}
+                  {tracks[tracks.length - 1].duration}
+                </p>
+              </div>
+              <button
+                onClick={() => playTrack(tracks.length - 1)}
+                aria-label={`Play ${tracks[tracks.length - 1].title}`}
+                className="w-12 h-12 rounded-full bg-[#A9A3CE] text-black flex items-center justify-center hover:bg-[#EDEBF4] hover:scale-105 transition-all duration-200 cursor-pointer shrink-0"
+                style={{ boxShadow: '0 0 24px rgba(169,163,206,0.3)' }}
+              >
+                {currentIndex === tracks.length - 1 && isPlaying ? (
+                  <PauseIcon className="w-5 h-5" />
+                ) : (
+                  <PlayIcon className="w-5 h-5" />
+                )}
+              </button>
             </div>
-          </div>
 
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Catalogue</p>
-            <p className="mt-3 text-5xl font-[family-name:var(--font-display)] font-bold tracking-tight tabular-nums text-[#A9A3CE]">
-              {tracks.length.toString().padStart(2, '0')}
-            </p>
-            <p className="text-[11px] uppercase tracking-[0.25em] text-[#9BA0B4] mt-1 font-[family-name:var(--font-display)]">
-              Original tracks
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-6 flex flex-col">
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Signal</p>
-            <div className="flex-1 min-h-20 mt-4 text-[#A9A3CE]">
-              <div className={`ct-eq ${isPlaying ? '' : 'ct-eq-paused'}`} aria-hidden="true">
-                {Array.from({ length: 24 }).map((_, i) => (
-                  <span key={i} />
-                ))}
+            {/* Catalogue + live signal */}
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex flex-col">
+              <div className="flex items-baseline justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">
+                  Catalogue
+                </p>
+                <p className="text-2xl font-[family-name:var(--font-display)] font-bold tabular-nums text-[#A9A3CE]">
+                  {tracks.length.toString().padStart(2, '0')}
+                </p>
+              </div>
+              <div className="flex-1 mt-4 h-14 text-[#A9A3CE]">
+                <div className={`ct-eq ${isPlaying ? '' : 'ct-eq-paused'}`} aria-hidden="true">
+                  {Array.from({ length: 24 }).map((_, i) => (
+                    <span key={i} />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* ============ TRACK LIST ============ */}
         <section className="max-w-6xl mx-auto px-5 md:px-8 mt-16">
