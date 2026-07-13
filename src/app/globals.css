@@ -183,17 +183,17 @@ body {
 .wipe-bar:nth-child(7) { left: 75vw;    transition-delay: 270ms; }
 .wipe-bar:nth-child(8) { left: 87.5vw;  transition-delay: 315ms; }
 
-/* Going to CreaTune: lavender-and-ink equalizer (logo palette) */
+/* Going to CreaTune: matches the site's solid black + blue/purple glow */
 .wipe-tone-music .wipe-bar:nth-child(odd) {
-  background: linear-gradient(180deg, #a9a3ce 0%, #1a1b26 40%, #0c0d13 100%);
+  background: linear-gradient(180deg, #7c5cff 0%, #17122b 40%, #000000 100%);
 }
 
 .wipe-tone-music .wipe-bar:nth-child(even) {
-  background: linear-gradient(180deg, #16171f 0%, #0c0d13 55%, #3a3350 100%);
+  background: linear-gradient(180deg, #0b0a14 0%, #000000 55%, #1d1637 100%);
 }
 
 .wipe-tone-music .wipe-bar:nth-child(4n) {
-  background: linear-gradient(180deg, #c9a9c0 0%, #1a1620 35%, #0c0d13 100%);
+  background: linear-gradient(180deg, #a9a3ce 0%, #120f22 35%, #000000 100%);
 }
 
 /* Returning to the portfolio: amber-and-ink arcade bars */
@@ -224,7 +224,7 @@ body {
   font-family: var(--font-script), cursive;
   font-size: clamp(3rem, 8vw, 6rem);
   color: #edebf4;
-  text-shadow: 0 0 40px rgba(169, 163, 206, 0.6), 0 0 80px rgba(201, 169, 192, 0.35);
+  text-shadow: 0 0 40px rgba(124, 92, 255, 0.65), 0 0 90px rgba(169, 163, 206, 0.35);
 }
 
 .wipe-tone-portfolio .wipe-label {
@@ -269,6 +269,46 @@ body {
   opacity: 0.5;
 }
 
+/* CreaTune live visualizer (player bar) — bars are scaled from the
+   Web Audio analyser via inline transforms, no CSS animation */
+.ct-viz {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.ct-viz span {
+  flex: 1;
+  height: 100%;
+  transform: scaleY(0.08);
+  transform-origin: bottom;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #c9a9c0, #a9a3ce 45%, #565c7e);
+  opacity: 0.9;
+  will-change: transform;
+}
+
+/* Mini "now playing" glyph in the track list */
+.ct-mini-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 18px;
+  height: 16px;
+}
+
+.ct-mini-eq span {
+  flex: 1;
+  height: 100%;
+  background: currentColor;
+  border-radius: 2px;
+  animation: ctEq 0.9s ease-in-out infinite alternate;
+  transform-origin: bottom;
+}
+
+.ct-mini-eq span:nth-child(2) { animation-delay: 0.2s; }
+.ct-mini-eq span:nth-child(3) { animation-delay: 0.35s; }
+
 @keyframes ctEq {
   0% { transform: scaleY(0.1); }
   100% { transform: scaleY(1); }
@@ -281,7 +321,8 @@ body {
   .marquee-content,
   .scanline,
   .scanline-wipe,
-  .ct-eq span {
+  .ct-eq span,
+  .ct-mini-eq span {
     animation: none;
   }
 
