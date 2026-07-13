@@ -102,6 +102,14 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
+  // Queue the first track on load so the player never shows a dead state
+  useEffect(() => {
+    if (tracks.length > 0) {
+      setCurrentIndex((idx) => (idx === null ? 0 : idx));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const countPlay = useCallback((track: CreaTuneTrack) => {
     if (lastCountedRef.current === track.id) return;
     lastCountedRef.current = track.id;
@@ -124,7 +132,18 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
           audio.pause();
           setIsPlaying(false);
         } else {
-          audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          // Queued but never loaded (fresh page load) — attach the source first
+          if (!audio.currentSrc && !audio.src) {
+            audio.src = track.url;
+            audio.load();
+          }
+          audio
+            .play()
+            .then(() => {
+              setIsPlaying(true);
+              countPlay(track);
+            })
+            .catch(() => setIsPlaying(false));
         }
         return;
       }
@@ -417,7 +436,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
 
       {/* Lyrics panel */}
       {showLyrics && (
-        <div className="fixed bottom-[76px] left-0 right-0 z-40 border-t border-[#1C1D2A] bg-black/90 backdrop-blur-md">
+        <div className="fixed bottom-[104px] md:bottom-[76px] left-0 right-0 z-40 border-t border-[#1C1D2A] bg-black/90 backdrop-blur-md">
           <div className="max-w-6xl mx-auto px-5 md:px-8 py-5 max-h-[40vh] overflow-y-auto">
             <div className="flex items-baseline justify-between border-b border-[#262838] pb-2">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#C9A9C0] font-[family-name:var(--font-display)]">Lyrics</p>
@@ -434,62 +453,104 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
         </div>
       )}
 
-      {/* Player bar */}
+      {/* Player bar — Spotify anatomy: art+meta | transport+progress | lyrics+volume */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-[#1C1D2A] z-40">
-        <div className="max-w-6xl mx-auto px-5 md:px-8 py-3 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-4">
-          {/* Now playing */}
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Now Playing</p>
-            <p className="text-sm font-bold truncate">
-              {currentTrack ? `${currentTrack.title} — ${currentTrack.artist}` : 'Select a track'}
-            </p>
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-2.5 md:py-3">
+          <div className="flex items-center gap-3 md:gap-6">
+            {/* Left: cover art + track meta */}
+            <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-[28%]">
+              <Image
+                src="/images/creatune-logo.png"
+                alt=""
+                width={44}
+                height={44}
+                className="rounded-[10px] border border-white/10 shrink-0"
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-bold truncate">{currentTrack ? currentTrack.title : '—'}</p>
+                <p className="text-[11px] uppercase tracking-[0.15em] text-[#9BA0B4] truncate">
+                  {currentTrack ? currentTrack.artist : ''}
+                </p>
+              </div>
+            </div>
+
+            {/* Center: transport + progress */}
+            <div className="flex flex-col items-center gap-1.5 md:flex-1">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handlePrev}
+                  aria-label="Previous track"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-[#9BA0B4] hover:text-[#EDEBF4] transition-colors duration-200 cursor-pointer"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M6 6h2v12H6zM9.5 12l8.5 6V6z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => (currentIndex === null ? playTrack(0) : playTrack(currentIndex))}
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                  className="w-11 h-11 rounded-full bg-[#EDEBF4] text-black flex items-center justify-center hover:bg-[#A9A3CE] hover:scale-105 transition-all duration-200 cursor-pointer"
+                >
+                  {isPlaying ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
+                </button>
+                <button
+                  onClick={handleNext}
+                  aria-label="Next track"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-[#9BA0B4] hover:text-[#EDEBF4] transition-colors duration-200 cursor-pointer"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z" />
+                  </svg>
+                </button>
+              </div>
+              <div className="hidden md:flex items-center gap-2 w-full max-w-md">
+                <span className="text-[11px] tabular-nums font-medium w-9 text-right text-[#9BA0B4]">{formatTime(currentTime)}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 0}
+                  step={1}
+                  value={Math.min(currentTime, duration || 0)}
+                  onChange={(e) => handleSeek(Number(e.target.value))}
+                  aria-label="Seek"
+                  className="flex-1 h-1 accent-[#A9A3CE] cursor-pointer"
+                />
+                <span className="text-[11px] tabular-nums font-medium w-9 text-[#9BA0B4]">
+                  {duration > 0 ? formatTime(duration) : currentTrack?.duration ?? '0:00'}
+                </span>
+              </div>
+            </div>
+
+            {/* Right: lyrics + volume */}
+            <div className="flex items-center gap-3 justify-end md:w-[28%]">
+              <button
+                onClick={() => setShowLyrics((v) => !v)}
+                aria-label={showLyrics ? 'Hide lyrics' : 'Show lyrics'}
+                aria-pressed={showLyrics}
+                className={`h-9 px-4 rounded-full border text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-200 cursor-pointer font-[family-name:var(--font-display)] ${
+                  showLyrics
+                    ? 'border-[#C9A9C0] text-[#C9A9C0] bg-[#14121F]'
+                    : 'border-[#3B3E52] text-[#9BA0B4] hover:border-[#C9A9C0] hover:text-[#C9A9C0]'
+                }`}
+              >
+                Lyrics
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={volume}
+                onChange={(e) => setVolume(Number(e.target.value))}
+                aria-label="Volume"
+                className="hidden md:block w-20 h-1 accent-[#EDEBF4] cursor-pointer"
+              />
+            </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handlePrev}
-              aria-label="Previous track"
-              className="w-10 h-10 rounded-full border border-[#3B3E52] flex items-center justify-center hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200 cursor-pointer"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M6 6h2v12H6zM9.5 12l8.5 6V6z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => (currentIndex === null ? playTrack(0) : playTrack(currentIndex))}
-              aria-label={isPlaying ? 'Pause' : 'Play'}
-              className="w-12 h-12 rounded-full bg-[#A9A3CE] text-[#0C0D13] flex items-center justify-center hover:bg-[#EDEBF4] transition-colors duration-200 cursor-pointer"
-              style={{ boxShadow: '0 0 24px rgba(169,163,206,0.35)' }}
-            >
-              {isPlaying ? <PauseIcon className="w-6 h-6" /> : <PlayIcon className="w-6 h-6" />}
-            </button>
-            <button
-              onClick={handleNext}
-              aria-label="Next track"
-              className="w-10 h-10 rounded-full border border-[#3B3E52] flex items-center justify-center hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200 cursor-pointer"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setShowLyrics((v) => !v)}
-              aria-label={showLyrics ? 'Hide lyrics' : 'Show lyrics'}
-              aria-pressed={showLyrics}
-              className={`h-10 px-4 rounded-full border text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-200 cursor-pointer font-[family-name:var(--font-display)] ${
-                showLyrics
-                  ? 'border-[#C9A9C0] text-[#C9A9C0] bg-[#14121F]'
-                  : 'border-[#3B3E52] text-[#9BA0B4] hover:border-[#C9A9C0] hover:text-[#C9A9C0]'
-              }`}
-            >
-              Lyrics
-            </button>
-          </div>
-
-          {/* Progress + volume */}
-          <div className="hidden md:flex items-center gap-4 justify-end">
-            <span className="text-xs tabular-nums font-medium w-10 text-right text-[#9BA0B4]">{formatTime(currentTime)}</span>
+          {/* Mobile progress row */}
+          <div className="mt-2 flex md:hidden items-center gap-2">
+            <span className="text-[11px] tabular-nums font-medium w-9 text-right text-[#9BA0B4]">{formatTime(currentTime)}</span>
             <input
               type="range"
               min={0}
@@ -498,19 +559,11 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
               value={Math.min(currentTime, duration || 0)}
               onChange={(e) => handleSeek(Number(e.target.value))}
               aria-label="Seek"
-              className="w-48 accent-[#A9A3CE] cursor-pointer"
+              className="flex-1 h-1 accent-[#A9A3CE] cursor-pointer"
             />
-            <span className="text-xs tabular-nums font-medium w-10 text-[#9BA0B4]">{formatTime(duration)}</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={volume}
-              onChange={(e) => setVolume(Number(e.target.value))}
-              aria-label="Volume"
-              className="w-20 accent-[#EDEBF4] cursor-pointer"
-            />
+            <span className="text-[11px] tabular-nums font-medium w-9 text-[#9BA0B4]">
+              {duration > 0 ? formatTime(duration) : currentTrack?.duration ?? '0:00'}
+            </span>
           </div>
         </div>
       </div>
