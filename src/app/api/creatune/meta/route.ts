@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
-
-const DATA_FILE = path.join(process.cwd(), 'src/data/creatune.json');
+import { readData as readStore, writeData as writeStore } from '@/lib/store';
 
 interface CreaTuneData {
   studio: string;
@@ -14,18 +11,15 @@ interface CreaTuneData {
   tracks: unknown[];
 }
 
+const EMPTY: CreaTuneData = { studio: 'CreaTune', tagline: '', albums: [], tracks: [] };
+
 async function readData(): Promise<CreaTuneData> {
-  try {
-    const content = await fs.readFile(DATA_FILE, 'utf-8');
-    const parsed = JSON.parse(content);
-    return { albums: [], tracks: [], studio: 'CreaTune', tagline: '', ...parsed };
-  } catch {
-    return { studio: 'CreaTune', tagline: '', albums: [], tracks: [] };
-  }
+  const data = await readStore<CreaTuneData>('creatune', EMPTY);
+  return { ...EMPTY, ...data };
 }
 
 async function writeData(data: CreaTuneData) {
-  await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  await writeStore('creatune', data);
 }
 
 function checkAuth(request: Request): NextResponse | null {

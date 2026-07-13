@@ -11,21 +11,29 @@ export default function ContactForm() {
   const [statusMessage, setStatusMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
 
+  // In production, post to Formspree (email delivery, no server storage needed).
+  // In local dev with no endpoint set, fall back to the /api/messages inbox.
+  const formspree = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !message) return;
 
     setIsSending(true);
     setStatusMessage('ENCRYPTING MESSAGE PACKET...');
-    
+
     try {
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name, email, subject, message })
-      });
+      const res = formspree
+        ? await fetch(formspree, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ name, email, subject: subject || 'No Subject', message }),
+          })
+        : await fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, subject, message }),
+          });
 
       if (res.ok) {
         setStatusMessage('PACKET TRANSMITTED. MESSAGE INBOX UPDATED.');

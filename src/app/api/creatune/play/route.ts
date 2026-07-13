@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { readData, writeData } from '@/lib/store';
 
-const DATA_FILE = path.join(process.cwd(), 'src/data/creatune.json');
+interface CreaTuneData {
+  tracks: { id: string; plays?: number }[];
+  [k: string]: unknown;
+}
 
 // POST /api/creatune/play - Count a listen (public)
 export async function POST(request: Request) {
@@ -12,16 +14,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Track ID required' }, { status: 400 });
     }
 
-    const content = await fs.readFile(DATA_FILE, 'utf-8');
-    const data = JSON.parse(content);
-
-    const track = data.tracks.find((t: any) => t.id === id);
+    const data = await readData<CreaTuneData>('creatune', { tracks: [] });
+    const track = data.tracks.find((t) => t.id === id);
     if (!track) {
       return NextResponse.json({ error: 'Track not found' }, { status: 404 });
     }
 
     track.plays = (track.plays || 0) + 1;
-    await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    await writeData('creatune', data);
 
     return NextResponse.json({ success: true, plays: track.plays });
   } catch (error) {

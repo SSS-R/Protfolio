@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
-
-const DATA_FILE = path.join(process.cwd(), 'src/data/portfolio.json');
+import { readData, writeData } from '@/lib/store';
 
 // GET /api/portfolio
 export async function GET() {
   try {
-    const fileContent = await fs.readFile(DATA_FILE, 'utf-8');
-    const data = JSON.parse(fileContent);
+    const data = await readData<Record<string, unknown>>('portfolio', {});
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error reading portfolio data:', error);
@@ -38,9 +34,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid data structure' }, { status: 400 });
     }
 
-    // Write back to file
-    await fs.writeFile(DATA_FILE, JSON.stringify(body, null, 2), 'utf-8');
-    
+    await writeData('portfolio', body);
+
     return NextResponse.json({ success: true, message: 'Portfolio data updated successfully' });
   } catch (error) {
     console.error('Error saving portfolio data:', error);

@@ -1,20 +1,13 @@
 import React from 'react';
-import fs from 'fs/promises';
-import path from 'path';
+import { readData } from '@/lib/store';
 import CreaTunePlayerProvider from '@/components/CreaTunePlayer';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-async function getCreaTuneData() {
-  try {
-    const filePath = path.join(process.cwd(), 'src/data/creatune.json');
-    const fileContent = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    console.error('Failed to read CreaTune data:', error);
-    return null;
-  }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getCreaTuneData(): Promise<any> {
+  return readData('creatune', null);
 }
 
 export default async function MusicSiteLayout({ children }: { children: React.ReactNode }) {

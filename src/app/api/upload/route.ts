@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { saveUpload } from '@/lib/store';
 
 // POST /api/upload
 export async function POST(request: Request) {
@@ -60,17 +59,10 @@ export async function POST(request: Request) {
     const filename = (formData.get('filename') as string) || `upload_${Date.now()}_${(file as File).name || 'image'}`;
     const baseName = filename.replace(/[^a-zA-Z0-9_.-]/g, '_').replace(/\.[^.]*$/, '');
     const sanitizedFilename = `${baseName}${extension}`;
-    
-    const uploadDir = path.join(process.cwd(), 'public/uploads');
-    
-    // Ensure directory exists
-    await fs.mkdir(uploadDir, { recursive: true });
-    
-    const filePath = path.join(uploadDir, sanitizedFilename);
-    await fs.writeFile(filePath, buffer);
 
-    const relativeUrl = `/uploads/${sanitizedFilename}`;
-    return NextResponse.json({ success: true, url: relativeUrl });
+    // Blob in production, local /public/uploads in dev — returns the URL to store.
+    const url = await saveUpload(sanitizedFilename, buffer, file.type);
+    return NextResponse.json({ success: true, url });
   } catch (error) {
     console.error('Error uploading file:', error);
     return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });

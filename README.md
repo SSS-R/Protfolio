@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio + CreaTune
 
-## Getting Started
+Personal portfolio (retro RPG/terminal theme) plus **CreaTune**, a Swiss-modern
+music site with a persistent Spotify-style player and a studio admin panel.
 
-First, run the development server:
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` (see [`.env.example`](.env.example)) — at minimum:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+ADMIN_PASSWORD=your-strong-passphrase
+```
 
-## Learn More
+In dev, all content and uploads persist to the local filesystem
+(`src/data/*.json`, `public/uploads/`). No cloud services needed.
 
-To learn more about Next.js, take a look at the following resources:
+## Deploying to Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The app is built to run on Vercel's serverless (read-only) filesystem by using
+**Vercel Blob** for both uploaded media and the JSON content store, and
+**Formspree** for the contact form.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 1. Push to a Git repo and import it into Vercel
 
-## Deploy on Vercel
+### 2. Create a Blob store
+Vercel dashboard → your project → **Storage → Create → Blob → Connect**.
+This auto-adds `BLOB_READ_WRITE_TOKEN` to the project. With it present, every
+admin edit, track/cover upload, and play-count increment persists to Blob.
+On first request the current committed `src/data/*.json` is seeded into Blob.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. Set environment variables
+Project → **Settings → Environment Variables**:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `ADMIN_PASSWORD` | ✅ | Admin login for `/admin` and `/music/admin` |
+| `BLOB_READ_WRITE_TOKEN` | auto | Added by connecting the Blob store |
+| `NEXT_PUBLIC_FORMSPREE_ENDPOINT` | for contact form | Your `https://formspree.io/f/xxxx` endpoint |
+| `NEXT_PUBLIC_SITE_URL` | optional | Custom domain for OG image URLs |
+
+### 4. Contact form (Formspree)
+Create a free form at [formspree.io](https://formspree.io), copy its endpoint
+(`https://formspree.io/f/xxxx`), and set `NEXT_PUBLIC_FORMSPREE_ENDPOINT`.
+Submissions arrive in your email — no server storage required.
+
+### 5. Deploy
+Vercel builds with `next build`. After the first deploy, log into
+`/music/admin` and `/admin` to manage content live; changes persist to Blob.
+
+## Notes
+- The three seeded demo tracks' audio is committed under `public/uploads/` so
+  music plays immediately. New uploads go to Blob.
+- `src/data/messages.json` and future local uploads are gitignored.
+- Storage logic lives in [`src/lib/store.ts`](src/lib/store.ts) — Blob in
+  production, filesystem in dev, chosen automatically by `BLOB_READ_WRITE_TOKEN`.

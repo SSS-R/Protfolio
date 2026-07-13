@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, IBM_Plex_Mono, JetBrains_Mono, Press_Start_2P, Yellowtail, Montserrat } from 'next/font/google';
-import fs from 'fs/promises';
-import path from 'path';
 import './globals.css';
+import { readData } from '@/lib/store';
 import ClientLayout from '@/components/ClientLayout';
 
 // Font configuration using next/font/google
@@ -50,6 +49,11 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
+  // Uses the deployment URL Vercel injects; falls back to localhost in dev.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  ),
   title: 'SULTAN SAJED SHAHRIAR | PORTFOLIO',
   description: 'CS Student · Freelance Web Dev · AI Systems Builder. Swiss Modernism meets Cyberpunk Terminal interface.',
   icons: {
@@ -80,15 +84,9 @@ export const metadata: Metadata = {
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-async function getPortfolioData() {
-  try {
-    const filePath = path.join(process.cwd(), 'src/data/portfolio.json');
-    const fileContent = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    console.error('Failed to read portfolio data:', error);
-    return null;
-  }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getPortfolioData(): Promise<any> {
+  return readData('portfolio', null);
 }
 
 export default async function RootLayout({

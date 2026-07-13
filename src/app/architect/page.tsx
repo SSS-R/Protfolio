@@ -1,18 +1,11 @@
 import React from 'react';
 import Image from 'next/image';
-import fs from 'fs/promises';
-import path from 'path';
+import { readData } from '@/lib/store';
 import ClientArchitect from '@/components/ClientArchitect';
 
-async function getPortfolioData() {
-  try {
-    const filePath = path.join(process.cwd(), 'src/data/portfolio.json');
-    const fileContent = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    console.error('Failed to read portfolio data:', error);
-    return null;
-  }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getPortfolioData(): Promise<any> {
+  return readData('portfolio', null);
 }
 
 export const revalidate = 0;
