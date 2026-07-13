@@ -29,7 +29,7 @@ interface ClientCreaTuneProps {
 }
 
 /* Palette lifted from the CreaTune logos:
-   ink #0C0D13 · surface #13141D · line #262838 · text #EDEBF4
+   ink #0C0D13 · surface #101119 · line #262838 · text #EDEBF4
    muted #9BA0B4 · lavender #A9A3CE · dusty pink #C9A9C0 · blue-grey #565C7E */
 
 function formatTime(seconds: number) {
@@ -48,9 +48,9 @@ const WAVE_BARS = Array.from({ length: 72 }, (_, i) => {
 });
 
 function waveColor(i: number, alpha: string) {
-  if (i % 7 === 0) return `linear-gradient(180deg, #C9A9C0${alpha}, #C9A9C011)`; // dusty pink
-  if (i % 3 === 0) return `linear-gradient(180deg, #A9A3CE${alpha}, #A9A3CE11)`; // lavender
-  return `linear-gradient(180deg, #565C7E${alpha}, #565C7E11)`; // blue-grey
+  if (i % 7 === 0) return `linear-gradient(180deg, #C9A9C0${alpha}, #C9A9C000)`; // dusty pink
+  if (i % 3 === 0) return `linear-gradient(180deg, #A9A3CE${alpha}, #A9A3CE00)`; // lavender
+  return `linear-gradient(180deg, #565C7E${alpha}, #565C7E00)`; // blue-grey
 }
 
 const PlayIcon = ({ className = 'w-5 h-5' }: { className?: string }) => (
@@ -190,7 +190,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-2 text-[#9BA0B4] hover:text-[#C9A9C0] transition-colors duration-200"
+                className="hidden md:flex items-center gap-2 text-[#9BA0B4] hover:text-[#C9A9C0] transition-colors duration-200"
               >
                 <Icon />
                 {label}
@@ -205,7 +205,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
                 e.preventDefault();
                 navigateWithCurtain('/');
               }}
-              className="border border-[#3B3E52] px-3 md:px-4 py-2 hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200"
+              className="rounded-full border border-[#3B3E52] px-4 py-2 hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200"
             >
               ← Portfolio
             </Link>
@@ -214,87 +214,118 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
       </header>
 
       <main className="flex-1 w-full pb-44">
-        {/* Hero — banner recreation: spaced caps over the glowing waveform */}
-        <section className="border-b border-[#262838] relative overflow-hidden bg-[radial-gradient(ellipse_at_center,#15161f_0%,#0C0D13_70%)]">
-          {/* Waveform glow layer (soft, blurred — like the banner) */}
+        {/* ============ HERO ============ */}
+        <section className="relative overflow-hidden border-b border-[#262838] bg-[radial-gradient(120%_90%_at_50%_0%,#191b2a_0%,#0C0D13_60%)]">
+          {/* Waveform, anchored to the baseline like a real signal */}
           <div
-            className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center gap-[3px] px-2 pointer-events-none blur-xl opacity-70"
+            className="absolute inset-x-0 bottom-0 h-64 flex items-end gap-[3px] px-2 pointer-events-none blur-2xl"
             aria-hidden="true"
           >
             {WAVE_BARS.map((h, i) => (
-              <span key={i} className="flex-1 rounded-full" style={{ height: `${h * 2.4}px`, background: waveColor(i, '66') }} />
+              <span key={i} className="flex-1 rounded-full" style={{ height: `${h * 2.6}px`, background: waveColor(i, 'AA') }} />
             ))}
           </div>
-          {/* Waveform sharp layer */}
           <div
-            className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center gap-[3px] px-2 pointer-events-none opacity-55"
+            className="absolute inset-x-0 bottom-0 h-64 flex items-end gap-[3px] px-2 pointer-events-none"
             aria-hidden="true"
           >
             {WAVE_BARS.map((h, i) => (
-              <span key={i} className="flex-1 rounded-full" style={{ height: `${h * 2.2}px`, background: waveColor(i, '55') }} />
+              <span key={i} className="flex-1 rounded-full" style={{ height: `${h * 2.2}px`, background: waveColor(i, '99') }} />
             ))}
           </div>
+          {/* Fade the waveform into the ink so it never fights the text */}
+          <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#0C0D13] via-transparent to-transparent pointer-events-none" aria-hidden="true"></div>
 
-          {/* The main circular logo, floating over the waveform */}
-          <div className="max-w-6xl mx-auto px-5 md:px-8 pt-20 md:pt-24 pb-24 relative">
-            <div className="flex justify-center mb-10">
+          <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-36 md:pb-44 relative flex flex-col items-center">
+            {/* Main circular logo */}
+            <div className="rounded-full p-[3px] bg-gradient-to-b from-[#A9A3CE66] to-transparent">
               <Image
                 src="/images/creatune-logo.png"
-                alt="CreaTune logo — signature in a circle"
-                width={128}
-                height={128}
+                alt={`${studio} logo`}
+                width={140}
+                height={140}
                 priority
-                className="rounded-full border border-[#EDEBF4]/20"
-                style={{ boxShadow: '0 0 50px rgba(169,163,206,0.35), 0 0 110px rgba(201,169,192,0.18)' }}
+                className="rounded-full border border-[#EDEBF4]/15"
+                style={{ boxShadow: '0 0 60px rgba(169,163,206,0.4), 0 0 140px rgba(201,169,192,0.2)' }}
               />
             </div>
+
             <h1
-              className="text-center font-[family-name:var(--font-display)] font-semibold uppercase text-[9vw] md:text-6xl lg:text-7xl tracking-[0.4em] md:tracking-[0.5em] -mr-[0.4em] leading-none"
-              style={{ textShadow: '0 0 36px rgba(169,163,206,0.35), 0 0 90px rgba(201,169,192,0.18)' }}
+              className="mt-10 text-center font-[family-name:var(--font-display)] font-semibold uppercase text-[9vw] md:text-6xl lg:text-7xl tracking-[0.4em] md:tracking-[0.5em] -mr-[0.4em] leading-none"
+              style={{ textShadow: '0 0 36px rgba(169,163,206,0.4), 0 0 90px rgba(201,169,192,0.2)' }}
             >
               {studio}
             </h1>
-            <p className="mt-7 text-center text-[11px] uppercase tracking-[0.35em] text-[#9BA0B4] font-[family-name:var(--font-display)]">
+            <p className="mt-6 text-center text-[11px] uppercase tracking-[0.35em] text-[#9BA0B4] font-[family-name:var(--font-display)] max-w-xl">
               {tagline}
             </p>
+
+            {/* CTA row */}
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+              <button
+                onClick={() => playTrack(currentIndex ?? 0)}
+                className="rounded-full bg-[#A9A3CE] text-[#0C0D13] pl-5 pr-6 py-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-display)] hover:bg-[#EDEBF4] transition-colors duration-200 cursor-pointer"
+                style={{ boxShadow: '0 0 32px rgba(169,163,206,0.35)' }}
+              >
+                {isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
+                {isPlaying ? 'Pause' : 'Listen now'}
+              </button>
+              {socialLinks.map(({ label, href, icon: Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-[#3B3E52] px-5 py-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-display)] text-[#9BA0B4] hover:border-[#C9A9C0] hover:text-[#C9A9C0] transition-colors duration-200"
+                >
+                  <Icon />
+                  {label}
+                </a>
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Studio strip: links + catalogue + live EQ */}
-        <section className="border-b border-[#262838]">
-          <div className="max-w-6xl mx-auto px-5 md:px-8 grid grid-cols-1 md:grid-cols-3 gap-px bg-[#262838] border-x border-[#262838]">
-            <div className="bg-[#0C0D13] p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">
-                Listen elsewhere
-              </p>
-              <div className="mt-4 flex flex-col gap-3">
-                {socialLinks.length > 0 ? (
-                  socialLinks.map(({ label, href, icon: Icon }) => (
-                    <a
-                      key={label}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 text-sm font-bold hover:text-[#C9A9C0] transition-colors duration-200"
-                    >
-                      <Icon className="w-5 h-5" />
-                      {label}
-                      <span className="ml-auto text-[#3B3E52]">↗</span>
-                    </a>
-                  ))
-                ) : (
-                  <p className="text-sm text-[#9BA0B4]">Links coming soon.</p>
-                )}
-              </div>
+        {/* ============ STUDIO STRIP ============ */}
+        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="rounded-2xl border border-[#262838] bg-[#101119] p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">
+              Listen elsewhere
+            </p>
+            <div className="mt-4 flex flex-col gap-3">
+              {socialLinks.length > 0 ? (
+                socialLinks.map(({ label, href, icon: Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-sm font-bold hover:text-[#C9A9C0] transition-colors duration-200"
+                  >
+                    <Icon className="w-5 h-5" />
+                    {label}
+                    <span className="ml-auto text-[#3B3E52]">↗</span>
+                  </a>
+                ))
+              ) : (
+                <p className="text-sm text-[#9BA0B4]">Links coming soon.</p>
+              )}
             </div>
-            <div className="bg-[#0C0D13] p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Catalogue</p>
-              <p className="mt-3 text-5xl font-[family-name:var(--font-display)] font-bold tracking-tight tabular-nums text-[#A9A3CE]">
-                {tracks.length.toString().padStart(2, '0')}
-              </p>
-              <p className="text-[11px] uppercase tracking-[0.25em] text-[#9BA0B4] mt-1 font-[family-name:var(--font-display)]">Original tracks</p>
-            </div>
-            <div className="bg-[#13141D] text-[#A9A3CE] p-5 h-32 md:h-auto">
+          </div>
+
+          <div className="rounded-2xl border border-[#262838] bg-[#101119] p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Catalogue</p>
+            <p className="mt-3 text-5xl font-[family-name:var(--font-display)] font-bold tracking-tight tabular-nums text-[#A9A3CE]">
+              {tracks.length.toString().padStart(2, '0')}
+            </p>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-[#9BA0B4] mt-1 font-[family-name:var(--font-display)]">
+              Original tracks
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[#262838] bg-[#101119] p-6 flex flex-col">
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Signal</p>
+            <div className="flex-1 min-h-20 mt-4 text-[#A9A3CE]">
               <div className={`ct-eq ${isPlaying ? '' : 'ct-eq-paused'}`} aria-hidden="true">
                 {Array.from({ length: 24 }).map((_, i) => (
                   <span key={i} />
@@ -304,22 +335,11 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
           </div>
         </section>
 
-        {/* Brand banner strip */}
-        <section className="border-b border-[#262838] bg-[#0C0D13]" aria-hidden="true">
-          <Image
-            src="/images/creatune-banner.png"
-            alt=""
-            width={1707}
-            height={282}
-            className="w-full h-auto opacity-90"
-          />
-        </section>
-
-        {/* Track list */}
-        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-12">
-          <div className="flex items-baseline justify-between border-b-2 border-[#EDEBF4] pb-3">
+        {/* ============ TRACK LIST ============ */}
+        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-16">
+          <div className="flex items-baseline justify-between border-b border-[#262838] pb-3">
             <h2 className="text-xs font-bold uppercase tracking-[0.3em] font-[family-name:var(--font-display)]">Tracks</h2>
-            <span className="text-xs font-bold tabular-nums">({tracks.length.toString().padStart(2, '0')})</span>
+            <span className="text-xs font-bold tabular-nums text-[#9BA0B4]">({tracks.length.toString().padStart(2, '0')})</span>
           </div>
 
           {tracks.length === 0 ? (
@@ -329,11 +349,11 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
               {tracks.map((track, index) => {
                 const isCurrent = currentIndex === index;
                 return (
-                  <li key={track.id} className="border-b border-[#262838]">
+                  <li key={track.id} className="border-b border-[#1A1B26]">
                     <button
                       onClick={() => playTrack(index)}
-                      className={`w-full grid grid-cols-[2.5rem_1fr_auto] md:grid-cols-[4rem_1fr_8rem_5rem_3rem] items-center gap-3 md:gap-6 py-5 text-left group transition-colors duration-200 cursor-pointer px-4 -mx-4 ${
-                        isCurrent ? 'bg-[#13141D] border-l-2 border-[#A9A3CE]' : 'hover:bg-[#101119]'
+                      className={`w-full grid grid-cols-[2.5rem_1fr_auto] md:grid-cols-[4rem_1fr_8rem_5rem_3rem] items-center gap-3 md:gap-6 py-5 text-left group transition-colors duration-200 cursor-pointer px-4 -mx-4 rounded-xl ${
+                        isCurrent ? 'bg-[#14121F]' : 'hover:bg-[#101119]'
                       }`}
                     >
                       <span
@@ -353,8 +373,13 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
                         {track.plays.toLocaleString()} listens
                       </span>
                       <span className="hidden md:block text-xs font-medium tabular-nums text-[#9BA0B4]">{track.duration}</span>
-                      <span className={`justify-self-end ${isCurrent ? 'text-[#A9A3CE]' : ''}`} aria-hidden="true">
-                        {isCurrent && isPlaying ? <PauseIcon /> : <PlayIcon />}
+                      <span
+                        className={`justify-self-end w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200 ${
+                          isCurrent ? 'bg-[#A9A3CE] text-[#0C0D13]' : 'border border-[#3B3E52] text-[#9BA0B4] group-hover:border-[#A9A3CE] group-hover:text-[#A9A3CE]'
+                        }`}
+                        aria-hidden="true"
+                      >
+                        {isCurrent && isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
                       </span>
                     </button>
                   </li>
@@ -364,8 +389,20 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
           )}
         </section>
 
+        {/* ============ BRAND BAND (banner artwork) ============ */}
+        <section className="mt-20 border-y border-[#262838] relative" aria-hidden="true">
+          <Image
+            src="/images/creatune-banner.png"
+            alt=""
+            width={1707}
+            height={282}
+            className="w-full h-auto"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0C0D13] via-transparent to-[#0C0D13] pointer-events-none"></div>
+        </section>
+
         {/* Footer note */}
-        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-16 text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4] flex flex-col md:flex-row justify-between gap-2 font-[family-name:var(--font-display)]">
+        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-10 text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4] flex items-center justify-between gap-2 font-[family-name:var(--font-display)]">
           <span>© 2026 {studio} — All sound, one desk.</span>
           <Image
             src="/images/creatune-logo.png"
@@ -397,7 +434,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
       )}
 
       {/* Player bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#101119] border-t border-[#262838] z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#101119]/97 backdrop-blur-sm border-t border-[#262838] z-40">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-3 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_1fr] items-center gap-4">
           {/* Now playing */}
           <div className="min-w-0">
@@ -412,7 +449,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             <button
               onClick={handlePrev}
               aria-label="Previous track"
-              className="w-9 h-9 border border-[#3B3E52] flex items-center justify-center hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200 cursor-pointer"
+              className="w-10 h-10 rounded-full border border-[#3B3E52] flex items-center justify-center hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200 cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M6 6h2v12H6zM9.5 12l8.5 6V6z" />
@@ -421,7 +458,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             <button
               onClick={() => (currentIndex === null ? playTrack(0) : playTrack(currentIndex))}
               aria-label={isPlaying ? 'Pause' : 'Play'}
-              className="w-12 h-12 bg-[#A9A3CE] text-[#0C0D13] flex items-center justify-center hover:bg-[#EDEBF4] transition-colors duration-200 cursor-pointer"
+              className="w-12 h-12 rounded-full bg-[#A9A3CE] text-[#0C0D13] flex items-center justify-center hover:bg-[#EDEBF4] transition-colors duration-200 cursor-pointer"
               style={{ boxShadow: '0 0 24px rgba(169,163,206,0.35)' }}
             >
               {isPlaying ? <PauseIcon className="w-6 h-6" /> : <PlayIcon className="w-6 h-6" />}
@@ -429,7 +466,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             <button
               onClick={handleNext}
               aria-label="Next track"
-              className="w-9 h-9 border border-[#3B3E52] flex items-center justify-center hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200 cursor-pointer"
+              className="w-10 h-10 rounded-full border border-[#3B3E52] flex items-center justify-center hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors duration-200 cursor-pointer"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z" />
@@ -439,9 +476,9 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
               onClick={() => setShowLyrics((v) => !v)}
               aria-label={showLyrics ? 'Hide lyrics' : 'Show lyrics'}
               aria-pressed={showLyrics}
-              className={`h-9 px-3 border text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-200 cursor-pointer font-[family-name:var(--font-display)] ${
+              className={`h-10 px-4 rounded-full border text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-200 cursor-pointer font-[family-name:var(--font-display)] ${
                 showLyrics
-                  ? 'border-[#C9A9C0] text-[#C9A9C0] bg-[#13141D]'
+                  ? 'border-[#C9A9C0] text-[#C9A9C0] bg-[#14121F]'
                   : 'border-[#3B3E52] text-[#9BA0B4] hover:border-[#C9A9C0] hover:text-[#C9A9C0]'
               }`}
             >

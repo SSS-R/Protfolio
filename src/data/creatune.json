@@ -8,31 +8,31 @@
   },
   "tracks": [
     {
-      "id": "trk_demo_1",
-      "title": "Demo Track 01",
+      "id": "trk_1783890011712_uvpmzp",
+      "title": "Echoes of Tomorrow",
       "artist": "CreaTune",
-      "duration": "06:12",
-      "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-      "plays": 0,
-      "lyrics": "[ Instrumental — no lyrics ]"
+      "duration": "03:45",
+      "url": "/uploads/1783890011360_Echoes_of_Tomorrow.mp3",
+      "plays": 2,
+      "lyrics": ""
     },
     {
-      "id": "trk_demo_2",
-      "title": "Demo Track 02",
+      "id": "trk_1783890027770_yc5ndx",
+      "title": "Fading Echoes",
       "artist": "CreaTune",
-      "duration": "07:05",
-      "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+      "duration": "03:44",
+      "url": "/uploads/1783890027733_Fading_Echoes.mp3",
       "plays": 0,
-      "lyrics": "[ Instrumental — no lyrics ]"
+      "lyrics": ""
     },
     {
-      "id": "trk_demo_3",
-      "title": "Demo Track 03",
+      "id": "trk_1783890060159_vf7jib",
+      "title": "It's just me again",
       "artist": "CreaTune",
-      "duration": "05:44",
-      "url": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-      "plays": 0,
-      "lyrics": "[ Instrumental — no lyrics ]"
+      "duration": "03:49",
+      "url": "/uploads/1783890060122_t_s_just_me_again.mp3",
+      "plays": 2,
+      "lyrics": ""
     }
   ]
 }

@@ -52,11 +52,12 @@
   --font-headline-lg: var(--font-ibm-plex-mono), monospace;
   --font-code-sm: var(--font-jetbrains-mono), monospace;
 
-  /* Zero rounded corners for brutalist feel */
+  /* Zero rounded corners for brutalist feel.
+     NOTE: --radius-full stays at its default (a true circle) — the CreaTune
+     music section depends on rounded-full for its circular branding. */
   --radius-default: 0px;
   --radius-lg: 0px;
   --radius-xl: 0px;
-  --radius-full: 0px;
 }
 
 /* Custom CSS global defaults */
@@ -262,7 +263,8 @@ body {
 
 .ct-eq.ct-eq-paused span {
   animation-play-state: paused;
-  transform: scaleY(0.12);
+  transform: scaleY(0.22);
+  opacity: 0.5;
 }
 
 @keyframes ctEq {
