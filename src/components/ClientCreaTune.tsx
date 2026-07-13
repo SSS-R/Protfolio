@@ -96,7 +96,77 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastCountedRef = useRef<string | null>(null);
 
+  // Web Audio analyser — drives the live visualizer from the actual signal
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const vizRef = useRef<HTMLDivElement | null>(null);
+  const rafRef = useRef<number>(0);
+
   const currentTrack = currentIndex !== null ? tracks[currentIndex] : null;
+
+  const ensureAnalyser = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!audioCtxRef.current) {
+      const Ctx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      try {
+        const ctx = new Ctx();
+        const source = ctx.createMediaElementSource(audio);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 128;
+        analyser.smoothingTimeConstant = 0.75;
+        source.connect(analyser);
+        analyser.connect(ctx.destination);
+        audioCtxRef.current = ctx;
+        analyserRef.current = analyser;
+      } catch {
+        /* visualizer is progressive enhancement — playback still works */
+      }
+    }
+    if (audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume().catch(() => {});
+    }
+  }, []);
+
+  // Animation loop: sample frequencies, scale the bars directly (no React state)
+  useEffect(() => {
+    const bars = vizRef.current?.children;
+    if (!isPlaying || !analyserRef.current || !bars || bars.length === 0) {
+      cancelAnimationFrame(rafRef.current);
+      if (bars) {
+        for (let i = 0; i < bars.length; i++) {
+          (bars[i] as HTMLElement).style.transform = 'scaleY(0.08)';
+        }
+      }
+      return;
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const analyser = analyserRef.current;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const tick = () => {
+      analyser.getByteFrequencyData(data);
+      for (let i = 0; i < bars.length; i++) {
+        // Skip the lowest bins (dominated by bass rumble) for a livelier spread
+        const bin = Math.floor(2 + (i * (data.length - 2)) / bars.length);
+        const v = data[bin] / 255;
+        (bars[i] as HTMLElement).style.transform = `scaleY(${Math.max(0.08, v)})`;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [isPlaying]);
+
+  useEffect(() => {
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      audioCtxRef.current?.close().catch(() => {});
+    };
+  }, []);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
@@ -137,6 +207,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             audio.src = track.url;
             audio.load();
           }
+          ensureAnalyser();
           audio
             .play()
             .then(() => {
@@ -151,6 +222,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
       setCurrentIndex(index);
       audio.src = track.url;
       audio.load();
+      ensureAnalyser();
       audio
         .play()
         .then(() => {
@@ -159,7 +231,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
         })
         .catch(() => setIsPlaying(false));
     },
-    [tracks, currentIndex, isPlaying, countPlay]
+    [tracks, currentIndex, isPlaying, countPlay, ensureAnalyser]
   );
 
   const handleNext = useCallback(() => {
@@ -180,6 +252,8 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
       setCurrentTime(value);
     }
   };
+
+  const totalListens = tracks.reduce((sum, t) => sum + (t.plays || 0), 0);
 
   const socialLinks = [
     { label: 'SoundCloud', href: links.soundcloud, icon: SoundCloudIcon },
@@ -364,21 +438,23 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
               </button>
             </div>
 
-            {/* Catalogue + live signal */}
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex flex-col">
-              <div className="flex items-baseline justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">
-                  Catalogue
-                </p>
-                <p className="text-2xl font-[family-name:var(--font-display)] font-bold tabular-nums text-[#A9A3CE]">
-                  {tracks.length.toString().padStart(2, '0')}
-                </p>
-              </div>
-              <div className="flex-1 mt-4 h-14 text-[#A9A3CE]">
-                <div className={`ct-eq ${isPlaying ? '' : 'ct-eq-paused'}`} aria-hidden="true">
-                  {Array.from({ length: 24 }).map((_, i) => (
-                    <span key={i} />
-                  ))}
+            {/* Catalogue stats */}
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex flex-col justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">
+                Catalogue
+              </p>
+              <div className="mt-4 flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-3xl font-[family-name:var(--font-display)] font-bold tabular-nums text-[#A9A3CE] leading-none">
+                    {tracks.length.toString().padStart(2, '0')}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#9BA0B4] mt-1.5">Tracks</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-[family-name:var(--font-display)] font-bold tabular-nums text-[#EDEBF4] leading-none">
+                    {totalListens.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#9BA0B4] mt-1.5">Total listens</p>
                 </div>
               </div>
             </div>
@@ -386,33 +462,42 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
         )}
 
         {/* ============ TRACK LIST ============ */}
-        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-16">
-          <div className="flex items-baseline justify-between border-b border-[#262838] pb-3">
-            <h2 className="text-xs font-bold uppercase tracking-[0.3em] font-[family-name:var(--font-display)]">Tracks</h2>
-            <span className="text-xs font-bold tabular-nums text-[#9BA0B4]">({tracks.length.toString().padStart(2, '0')})</span>
-          </div>
+        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-6">
+          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden">
+            <div className="flex items-baseline justify-between px-5 md:px-6 pt-5 pb-3 border-b border-white/[0.06]">
+              <h2 className="text-xs font-bold uppercase tracking-[0.3em] font-[family-name:var(--font-display)]">Tracks</h2>
+              <span className="text-xs font-bold tabular-nums text-[#9BA0B4]">({tracks.length.toString().padStart(2, '0')})</span>
+            </div>
 
-          {tracks.length === 0 ? (
-            <p className="py-12 text-sm text-[#9BA0B4]">No tracks published yet. Check back soon.</p>
-          ) : (
+            {tracks.length === 0 ? (
+              <p className="px-5 md:px-6 py-12 text-sm text-[#9BA0B4]">No tracks published yet. Check back soon.</p>
+            ) : (
             <ol>
               {tracks.map((track, index) => {
                 const isCurrent = currentIndex === index;
                 return (
-                  <li key={track.id} className="border-b border-[#1A1B26]">
+                  <li key={track.id} className="border-b border-white/[0.04] last:border-0">
                     <button
                       onClick={() => playTrack(index)}
-                      className={`w-full grid grid-cols-[2.5rem_1fr_auto] md:grid-cols-[4rem_1fr_8rem_5rem_3rem] items-center gap-3 md:gap-6 py-5 text-left group transition-colors duration-200 cursor-pointer px-4 -mx-4 rounded-xl ${
-                        isCurrent ? 'bg-[#7C5CFF]/[0.10] ring-1 ring-[#7C5CFF]/25' : 'hover:bg-white/[0.03]'
+                      className={`w-full grid grid-cols-[2.5rem_1fr_auto] md:grid-cols-[3.5rem_1fr_8rem_5rem_3rem] items-center gap-3 md:gap-6 py-4 px-5 md:px-6 text-left group transition-colors duration-200 cursor-pointer ${
+                        isCurrent ? 'bg-[#7C5CFF]/[0.08]' : 'hover:bg-white/[0.03]'
                       }`}
                     >
-                      <span
-                        className={`text-2xl md:text-4xl font-[family-name:var(--font-display)] font-bold tabular-nums tracking-tight ${
-                          isCurrent ? 'text-[#A9A3CE]' : 'text-[#31334A] group-hover:text-[#9BA0B4]'
-                        }`}
-                      >
-                        {(index + 1).toString().padStart(2, '0')}
-                      </span>
+                      {isCurrent && isPlaying ? (
+                        <span className="ct-mini-eq text-[#A9A3CE]" aria-label="Now playing">
+                          <span />
+                          <span />
+                          <span />
+                        </span>
+                      ) : (
+                        <span
+                          className={`text-xl md:text-3xl font-[family-name:var(--font-display)] font-bold tabular-nums tracking-tight ${
+                            isCurrent ? 'text-[#A9A3CE]' : 'text-[#31334A] group-hover:text-[#9BA0B4]'
+                          }`}
+                        >
+                          {(index + 1).toString().padStart(2, '0')}
+                        </span>
+                      )}
                       <span className="min-w-0 flex items-center gap-3 md:gap-4">
                         <Image
                           src="/images/creatune-logo.png"
@@ -445,7 +530,8 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
                 );
               })}
             </ol>
-          )}
+            )}
+          </div>
         </section>
 
         {/* Footer note */}
@@ -463,7 +549,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
 
       {/* Lyrics panel */}
       {showLyrics && (
-        <div className="fixed bottom-[104px] md:bottom-[76px] left-0 right-0 z-40 border-t border-[#1C1D2A] bg-black/90 backdrop-blur-md">
+        <div className="fixed bottom-[141px] md:bottom-[113px] left-0 right-0 z-40 border-t border-[#1C1D2A] bg-black/90 backdrop-blur-md">
           <div className="max-w-6xl mx-auto px-5 md:px-8 py-5 max-h-[40vh] overflow-y-auto">
             <div className="flex items-baseline justify-between border-b border-[#262838] pb-2">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#C9A9C0] font-[family-name:var(--font-display)]">Lyrics</p>
@@ -482,6 +568,14 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
 
       {/* Player bar — Spotify anatomy: art+meta | transport+progress | lyrics+volume */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-md border-t border-[#1C1D2A] z-40">
+        {/* Live visualizer — bars follow the actual audio signal */}
+        <div className="border-b border-white/[0.04]">
+          <div ref={vizRef} className="ct-viz max-w-6xl mx-auto px-4 md:px-8 h-9" aria-hidden="true">
+            {Array.from({ length: 36 }).map((_, i) => (
+              <span key={i} />
+            ))}
+          </div>
+        </div>
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-2.5 md:py-3">
           <div className="flex items-center gap-3 md:gap-6">
             {/* Left: cover art + track meta */}
@@ -516,7 +610,7 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
                 <button
                   onClick={() => (currentIndex === null ? playTrack(0) : playTrack(currentIndex))}
                   aria-label={isPlaying ? 'Pause' : 'Play'}
-                  className="w-11 h-11 rounded-full bg-[#EDEBF4] text-black flex items-center justify-center hover:bg-[#A9A3CE] hover:scale-105 transition-all duration-200 cursor-pointer"
+                  className="w-11 h-11 rounded-full bg-[#A9A3CE] text-black flex items-center justify-center hover:bg-[#EDEBF4] hover:scale-105 transition-all duration-200 cursor-pointer"
                 >
                   {isPlaying ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
                 </button>
