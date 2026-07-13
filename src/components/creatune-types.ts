@@ -11,6 +11,7 @@ export interface CreaTuneTrack {
   lyrics?: string;
   cover?: string;
   albumId?: string;
+  featured?: boolean;
 }
 
 export interface CreaTuneAlbum {
@@ -24,4 +25,16 @@ export interface CreaTuneLinks {
   soundcloud?: string;
   youtube?: string;
   album?: string;
+}
+
+export interface CreaTuneNews {
+  title: string;
+  body: string;
+}
+
+export interface CreaTuneNextRelease {
+  title: string;
+  date: string;
+  note: string;
+  cover?: string;
 }

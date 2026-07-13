@@ -6,6 +6,16 @@
     "youtube": "https://www.youtube.com/@CreaTune-0fficial",
     "album": ""
   },
+  "news": {
+    "title": "In the studio",
+    "body": "Currently mixing new material and refining the CreaTune sound. Follow along on SoundCloud and YouTube for the latest drops."
+  },
+  "nextRelease": {
+    "title": "",
+    "date": "",
+    "note": "",
+    "cover": ""
+  },
   "albums": [],
   "tracks": [
     {
@@ -14,7 +24,7 @@
       "artist": "CreaTune",
       "duration": "03:45",
       "url": "/uploads/1783890011360_Echoes_of_Tomorrow.mp3",
-      "plays": 7,
+      "plays": 8,
       "lyrics": ""
     },
     {

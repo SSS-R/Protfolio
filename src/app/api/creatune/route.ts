@@ -8,6 +8,8 @@ interface CreaTuneData {
   studio: string;
   tagline: string;
   links?: Record<string, string>;
+  news?: Record<string, unknown>;
+  nextRelease?: Record<string, unknown>;
   albums: unknown[];
   tracks: Record<string, unknown>[];
 }
@@ -87,7 +89,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { id, title, artist, lyrics, cover, albumId } = body;
+    const { id, title, artist, lyrics, cover, albumId, featured } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Track ID required' }, { status: 400 });
@@ -105,6 +107,7 @@ export async function PATCH(request: Request) {
     if (typeof lyrics === 'string') track.lyrics = lyrics;
     if (typeof cover === 'string') track.cover = cover;
     if (typeof albumId === 'string') track.albumId = albumId;
+    if (typeof featured === 'boolean') track.featured = featured;
 
     await writeData(data);
     return NextResponse.json({ success: true, track });

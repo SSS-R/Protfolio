@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import type { CreaTuneTrack, CreaTuneAlbum } from './creatune-types';
+import type { CreaTuneTrack, CreaTuneAlbum, CreaTuneNews, CreaTuneNextRelease } from './creatune-types';
 
 function getStoredPassword() {
   if (typeof window === 'undefined') return null;
@@ -157,6 +157,130 @@ function TrackEditor({
   );
 }
 
+// ── Landing content editor (news + next release) ─────────────────────
+function MetaEditor({
+  initialNews,
+  initialNext,
+  pass,
+  onSaved,
+}: {
+  initialNews: CreaTuneNews | null;
+  initialNext: CreaTuneNextRelease | null;
+  pass: string;
+  onSaved: () => void;
+}) {
+  const [newsTitle, setNewsTitle] = useState(initialNews?.title || '');
+  const [newsBody, setNewsBody] = useState(initialNews?.body || '');
+  const [nrTitle, setNrTitle] = useState(initialNext?.title || '');
+  const [nrDate, setNrDate] = useState(initialNext?.date || '');
+  const [nrNote, setNrNote] = useState(initialNext?.note || '');
+  const [nrCover, setNrCover] = useState(initialNext?.cover || '');
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const save = async () => {
+    setBusy(true);
+    setMsg('Saving…');
+    try {
+      let cover = nrCover;
+      if (coverFile) cover = await uploadImage(coverFile, pass);
+      const res = await fetch('/api/creatune/meta', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': pass },
+        body: JSON.stringify({
+          news: { title: newsTitle, body: newsBody },
+          nextRelease: { title: nrTitle, date: nrDate, note: nrNote, cover },
+        }),
+      });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        setMsg(e.error || `Failed (${res.status})`);
+        return;
+      }
+      setNrCover(cover);
+      setCoverFile(null);
+      setCoverPreview(null);
+      setMsg('Landing content saved.');
+      onSaved();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Save failed');
+    } finally {
+      setBusy(false);
+      setTimeout(() => setMsg(''), 5000);
+    }
+  };
+
+  return (
+    <section className="mt-12">
+      <h2 className="text-xs font-bold uppercase tracking-[0.3em] border-b border-white/10 pb-3">Landing content</h2>
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* News */}
+        <div className="flex flex-col gap-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0]">News about me</p>
+          <div className="flex flex-col gap-1.5">
+            <label className={labelClass}>Headline</label>
+            <input value={newsTitle} onChange={(e) => setNewsTitle(e.target.value)} className={inputClass} disabled={busy} placeholder="In the studio" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className={labelClass}>Body</label>
+            <textarea rows={5} value={newsBody} onChange={(e) => setNewsBody(e.target.value)} className={`${inputClass} resize-y leading-6`} disabled={busy} placeholder="What you're working on…" />
+          </div>
+        </div>
+
+        {/* Next release */}
+        <div className="flex flex-col gap-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0]">Next release (leave title empty to hide)</p>
+          <div className="flex items-start gap-3">
+            <div className="flex flex-col items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={coverPreview || nrCover || LOGO} alt="" className="w-16 h-16 rounded-lg border border-white/10 object-cover" />
+              <label className={`${ghostBtn} text-center`}>
+                Cover
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] || null;
+                    setCoverFile(f);
+                    setCoverPreview(f ? URL.createObjectURL(f) : null);
+                  }}
+                />
+              </label>
+            </div>
+            <div className="flex-1 flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className={labelClass}>Title</label>
+                <input value={nrTitle} onChange={(e) => setNrTitle(e.target.value)} className={inputClass} disabled={busy} placeholder="Upcoming single" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className={labelClass}>Date</label>
+                <input value={nrDate} onChange={(e) => setNrDate(e.target.value)} className={inputClass} disabled={busy} placeholder="Aug 2026" />
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className={labelClass}>Note</label>
+            <textarea rows={2} value={nrNote} onChange={(e) => setNrNote(e.target.value)} className={`${inputClass} resize-y leading-6`} disabled={busy} placeholder="A teaser line…" />
+          </div>
+        </div>
+      </div>
+      <div className="mt-5 flex items-center gap-4">
+        <button onClick={save} disabled={busy} className={primaryBtn}>
+          {busy ? 'Saving…' : 'Save landing content'}
+        </button>
+        {msg && (
+          <p role="status" aria-live="polite" className="text-sm font-medium text-[#A9A3CE]">
+            {msg}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 // ── Album manager ────────────────────────────────────────────────────
 function AlbumManager({
   albums,
@@ -295,6 +419,9 @@ export default function ClientCreaTuneAdmin() {
 
   const [tracks, setTracks] = useState<CreaTuneTrack[]>([]);
   const [albums, setAlbums] = useState<CreaTuneAlbum[]>([]);
+  const [news, setNews] = useState<CreaTuneNews | null>(null);
+  const [nextRelease, setNextRelease] = useState<CreaTuneNextRelease | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -317,11 +444,25 @@ export default function ClientCreaTuneAdmin() {
         const data = await res.json();
         setTracks(data.tracks || []);
         setAlbums(data.albums || []);
+        setNews(data.news || null);
+        setNextRelease(data.nextRelease || null);
+        setLoaded(true);
       }
     } catch {
       /* noop */
     }
   }, []);
+
+  const toggleFeatured = async (track: CreaTuneTrack) => {
+    if (!pass) return;
+    // Optimistic flip
+    setTracks((prev) => prev.map((t) => (t.id === track.id ? { ...t, featured: !t.featured } : t)));
+    await fetch('/api/creatune', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'x-admin-password': pass },
+      body: JSON.stringify({ id: track.id, featured: !track.featured }),
+    }).catch(() => fetchData());
+  };
 
   useEffect(() => {
     if (getStoredPassword()) {
@@ -534,6 +675,17 @@ export default function ClientCreaTuneAdmin() {
               </div>
             </section>
 
+            {/* Landing content (news + next release) */}
+            {loaded && (
+              <MetaEditor
+                key="meta"
+                initialNews={news}
+                initialNext={nextRelease}
+                pass={pass}
+                onSaved={fetchData}
+              />
+            )}
+
             {/* Albums */}
             <AlbumManager albums={albums} pass={pass} onChanged={fetchData} />
 
@@ -679,6 +831,20 @@ export default function ClientCreaTuneAdmin() {
                         </span>
                         <span className="hidden md:block text-sm tabular-nums text-[#9BA0B4]">{track.duration}</span>
                         <span className="flex items-center gap-2 justify-self-end">
+                          <button
+                            onClick={() => toggleFeatured(track)}
+                            aria-label={track.featured ? 'Unfeature track' : 'Feature track'}
+                            title={track.featured ? 'Featured on landing' : 'Feature on landing'}
+                            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${
+                              track.featured
+                                ? 'border-[#C9A9C0] text-[#C9A9C0] bg-[#14121F]'
+                                : 'border-[#3B3E52] text-[#31334A] hover:text-[#9BA0B4] hover:border-[#9BA0B4]'
+                            }`}
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill={track.featured ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                              <path d="M12 2l3 6.5 7 .9-5 4.8 1.3 7L12 18.5 5.4 21.2 6.7 14 1.7 9.4l7-.9z" />
+                            </svg>
+                          </button>
                           <button
                             onClick={() => setEditingId(editingId === track.id ? null : track.id)}
                             className={`${ghostBtn} ${editingId === track.id ? 'border-[#A9A3CE] text-[#A9A3CE]' : ''}`}
