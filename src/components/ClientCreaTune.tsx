@@ -254,7 +254,11 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             aria-hidden="true"
           >
             {WAVE_BARS.map((h, i) => (
-              <span key={i} className="flex-1 rounded-full" style={{ height: `${h * 2.6}px`, background: waveColor(i, 'AA') }} />
+              <span
+                key={i}
+                className={`flex-1 rounded-full ${i % 2 === 1 ? 'hidden sm:block' : ''}`}
+                style={{ height: `${h * 2.6}px`, background: waveColor(i, 'AA') }}
+              />
             ))}
           </div>
           <div
@@ -262,7 +266,11 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
             aria-hidden="true"
           >
             {WAVE_BARS.map((h, i) => (
-              <span key={i} className="flex-1 rounded-full" style={{ height: `${h * 2.2}px`, background: waveColor(i, '99') }} />
+              <span
+                key={i}
+                className={`flex-1 rounded-full ${i % 2 === 1 ? 'hidden sm:block' : ''}`}
+                style={{ height: `${h * 2.2}px`, background: waveColor(i, '99') }}
+              />
             ))}
           </div>
           {/* Fade the waveform into the ink so it never fights the text */}
@@ -405,10 +413,19 @@ export default function ClientCreaTune({ studio, tagline, links, initialTracks }
                       >
                         {(index + 1).toString().padStart(2, '0')}
                       </span>
-                      <span className="min-w-0">
-                        <span className="block text-base md:text-xl font-bold tracking-tight truncate">{track.title}</span>
-                        <span className={`block text-xs uppercase tracking-[0.2em] mt-1 ${isCurrent ? 'text-[#C9A9C0]' : 'text-[#9BA0B4]'}`}>
-                          {track.artist}
+                      <span className="min-w-0 flex items-center gap-3 md:gap-4">
+                        <Image
+                          src="/images/creatune-logo.png"
+                          alt=""
+                          width={44}
+                          height={44}
+                          className={`rounded-[10px] border shrink-0 ${isCurrent ? 'border-[#A9A3CE]/60' : 'border-white/10'}`}
+                        />
+                        <span className="min-w-0">
+                          <span className="block text-base md:text-xl font-bold tracking-tight truncate">{track.title}</span>
+                          <span className={`block text-xs uppercase tracking-[0.2em] mt-1 ${isCurrent ? 'text-[#C9A9C0]' : 'text-[#9BA0B4]'}`}>
+                            {track.artist}
+                          </span>
                         </span>
                       </span>
                       <span className="hidden md:block text-xs font-medium tabular-nums text-[#9BA0B4]">
