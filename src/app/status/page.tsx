@@ -1,6 +1,6 @@
 import React from 'react';
 import { readData } from '@/lib/store';
-import Image from 'next/image';
+import type { RoadmapNode } from '@/types/portfolio';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getPortfolioData(): Promise<any> {
@@ -14,9 +14,9 @@ export default async function StatusPage() {
   const data = await getPortfolioData();
   const roadmap = data?.roadmap || [];
 
-  const completedQuests = roadmap.filter((node: any) => node.status === 'completed');
-  const activeQuests = roadmap.filter((node: any) => node.status === 'active');
-  const lockedQuests = roadmap.filter((node: any) => node.status === 'locked');
+  const completedQuests = roadmap.filter((node: RoadmapNode) => node.status === 'completed');
+  const activeQuests = roadmap.filter((node: RoadmapNode) => node.status === 'active');
+  const lockedQuests = roadmap.filter((node: RoadmapNode) => node.status === 'locked');
 
   const totalQuests = roadmap.length;
   const progressPercent = totalQuests > 0 ? Math.round((completedQuests.length / totalQuests) * 100) : 0;
@@ -64,7 +64,7 @@ export default async function StatusPage() {
           </h2>
 
           <div className="relative pl-8 border-l border-brand-ruled space-y-12">
-            {roadmap.map((node: any, idx: number) => {
+            {roadmap.map((node: RoadmapNode) => {
               const isCompleted = node.status === 'completed';
               const isActive = node.status === 'active';
               const isLocked = node.status === 'locked';

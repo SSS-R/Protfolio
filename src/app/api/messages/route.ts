@@ -1,48 +1,56 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { requireAdmin } from '@/lib/auth';
 
+// Local-dev contact inbox. In production the contact form posts to Formspree
+// (email delivery), so this filesystem-backed inbox is never written on Vercel.
 const MESSAGES_FILE = path.join(process.cwd(), 'src/data/messages.json');
+const isServerless = !!process.env.VERCEL;
 
-// Helper to load messages
-async function readMessages() {
+interface Message {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  timestamp: string;
+}
+
+async function readMessages(): Promise<Message[]> {
   try {
     const content = await fs.readFile(MESSAGES_FILE, 'utf-8');
-    return JSON.parse(content);
-  } catch (error) {
+    return JSON.parse(content) as Message[];
+  } catch {
     return [];
   }
 }
 
-// Helper to save messages
-async function writeMessages(data: any[]) {
+async function writeMessages(data: Message[]) {
   await fs.writeFile(MESSAGES_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 // GET /api/messages - Fetch messages (Admin only)
 export async function GET(request: Request) {
+  const authError = requireAdmin(request);
+  if (authError) return authError;
   try {
-    const headerPassword = request.headers.get('x-admin-password');
-    const systemPassword = process.env.ADMIN_PASSWORD;
-
-    if (!systemPassword) {
-      return NextResponse.json({ error: 'Server misconfigured: ADMIN_PASSWORD not set' }, { status: 500 });
-    }
-
-    if (headerPassword !== systemPassword) {
-      return NextResponse.json({ error: 'Access Denied: Invalid credentials' }, { status: 401 });
-    }
-
     const messages = await readMessages();
-    // Return newest messages first
-    return NextResponse.json(messages.reverse());
-  } catch (error) {
+    return NextResponse.json(messages.reverse()); // newest first
+  } catch {
     return NextResponse.json({ error: 'Failed to retrieve messages' }, { status: 500 });
   }
 }
 
-// POST /api/messages - Submit contact form (Public)
+// POST /api/messages - Submit contact form (Public, local dev only)
 export async function POST(request: Request) {
+  // On Vercel the filesystem is read-only; the contact form uses Formspree there.
+  if (isServerless) {
+    return NextResponse.json(
+      { error: 'Inbox is local-dev only. Set NEXT_PUBLIC_FORMSPREE_ENDPOINT for production.' },
+      { status: 501 }
+    );
+  }
   try {
     const body = await request.json();
     const { name, email, subject, message } = body;
@@ -51,37 +59,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Required fields missing' }, { status: 400 });
     }
 
-    const newMessage = {
+    const newMessage: Message = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       name,
       email,
       subject: subject || 'No Subject',
       message,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     const currentMessages = await readMessages();
     currentMessages.push(newMessage);
     await writeMessages(currentMessages);
-
-    // =========================================================================
-    // DYNAMIC NOTIFICATION HOOK PLACEHOLDER
-    // =========================================================================
-    // You can easily plug in a Slack/Discord webhook, or email transporter here!
-    // Example Discord Webhook call:
-    /*
-    const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
-    if (DISCORD_WEBHOOK_URL) {
-      await fetch(DISCORD_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: `📬 **New Portfolio Message!**\n**From:** ${name} (${email})\n**Subject:** ${subject}\n**Message:**\n${message}`
-        })
-      });
-    }
-    */
-    // =========================================================================
 
     return NextResponse.json({ success: true, message: 'Message recorded successfully' });
   } catch (error) {
@@ -90,34 +79,22 @@ export async function POST(request: Request) {
   }
 }
 
-// DELETE /api/messages - Delete a message (Admin only)
+// DELETE /api/messages?id=... - Delete a message (Admin only)
 export async function DELETE(request: Request) {
+  const authError = requireAdmin(request);
+  if (authError) return authError;
   try {
-    const headerPassword = request.headers.get('x-admin-password');
-    const systemPassword = process.env.ADMIN_PASSWORD;
-
-    if (!systemPassword) {
-      return NextResponse.json({ error: 'Server misconfigured: ADMIN_PASSWORD not set' }, { status: 500 });
-    }
-
-    if (headerPassword !== systemPassword) {
-      return NextResponse.json({ error: 'Access Denied: Invalid credentials' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-
     if (!id) {
       return NextResponse.json({ error: 'Message ID required' }, { status: 400 });
     }
 
-    const currentMessages = await readMessages();
-    const updatedMessages = currentMessages.filter((msg: any) => msg.id !== id);
-    
-    await writeMessages(updatedMessages);
+    const updated = (await readMessages()).filter((msg) => msg.id !== id);
+    await writeMessages(updated);
 
     return NextResponse.json({ success: true, message: 'Message removed successfully' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 });
   }
 }

@@ -1,20 +1,12 @@
 import { NextResponse } from 'next/server';
 import { saveUpload } from '@/lib/store';
+import { requireAdmin } from '@/lib/auth';
 
 // POST /api/upload
 export async function POST(request: Request) {
   try {
-    // Password validation
-    const headerPassword = request.headers.get('x-admin-password');
-    const systemPassword = process.env.ADMIN_PASSWORD;
-
-    if (!systemPassword) {
-      return NextResponse.json({ error: 'Server misconfigured: ADMIN_PASSWORD not set' }, { status: 500 });
-    }
-
-    if (headerPassword !== systemPassword) {
-      return NextResponse.json({ error: 'Access Denied: Invalid credentials' }, { status: 401 });
-    }
+    const authError = requireAdmin(request);
+    if (authError) return authError;
 
     const formData = await request.formData();
     const file = formData.get('file') as Blob | null;

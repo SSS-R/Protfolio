@@ -4,11 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { CreaTuneTrack, CreaTuneAlbum, CreaTuneNews, CreaTuneNextRelease } from './creatune-types';
-
-function getStoredPassword() {
-  if (typeof window === 'undefined') return null;
-  return sessionStorage.getItem('admin_password');
-}
+import { useAdminAuthed, getAdminPassword, setAdminPassword } from '@/hooks/useAdminSession';
 
 const inputClass =
   'border border-[#3B3E52] bg-[#101119] text-[#EDEBF4] px-3 py-2 text-sm outline-none focus:border-[#A9A3CE] disabled:opacity-50 rounded-lg';
@@ -17,6 +13,11 @@ const primaryBtn =
   'bg-[#A9A3CE] text-black px-6 py-2.5 text-[11px] font-bold uppercase tracking-[0.25em] rounded-full hover:bg-[#EDEBF4] transition-colors disabled:opacity-30 cursor-pointer';
 const ghostBtn =
   'border border-[#3B3E52] text-[#9BA0B4] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:border-[#A9A3CE] hover:text-[#A9A3CE] transition-colors cursor-pointer';
+
+// Prefix a filename with a timestamp for uniqueness (module scope: not render).
+function stampedName(name: string): string {
+  return `${Date.now()}_${name}`;
+}
 
 // Upload an image via the shared upload API; returns its public URL
 async function uploadImage(file: File, pass: string): Promise<string> {
@@ -413,7 +414,7 @@ function AlbumManager({
 
 // ── Main admin ───────────────────────────────────────────────────────
 export default function ClientCreaTuneAdmin() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = useAdminAuthed();
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
@@ -435,7 +436,7 @@ export default function ClientCreaTuneAdmin() {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
-  const pass = getStoredPassword() || '';
+  const pass = getAdminPassword() || '';
 
   const fetchData = useCallback(async () => {
     try {
@@ -465,11 +466,10 @@ export default function ClientCreaTuneAdmin() {
   };
 
   useEffect(() => {
-    if (getStoredPassword()) {
-      setIsAuthenticated(true);
-      fetchData();
-    }
-  }, [fetchData]);
+    // Async server fetch (setState after the response), not a synchronous cascade.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (isAuthenticated) fetchData();
+  }, [isAuthenticated, fetchData]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -484,10 +484,8 @@ export default function ClientCreaTuneAdmin() {
         return;
       }
       if (res.status === 400 || res.ok) {
-        sessionStorage.setItem('admin_password', password);
-        setIsAuthenticated(true);
+        setAdminPassword(password);
         setPassword('');
-        fetchData();
       } else {
         setLoginError(`Auth error (${res.status}).`);
       }
@@ -526,7 +524,7 @@ export default function ClientCreaTuneAdmin() {
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('filename', `${Date.now()}_${file.name}`);
+      formData.append('filename', stampedName(file.name));
 
       const uploadRes = await fetch('/api/upload', {
         method: 'POST',

@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { readData } from '@/lib/store';
+import type { Project, Skill } from '@/types/portfolio';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getPortfolioData(): Promise<any> {
@@ -40,7 +41,7 @@ export default async function Home() {
   const emptySlotsCount = Math.max(0, totalGridSlots - filledSlots.length);
   const emptySlots = Array(emptySlotsCount).fill(null);
 
-  const activeProjects = (data?.projects || []).filter((p: any) => p.category === 'ACTIVE');
+  const activeProjects = (data?.projects || []).filter((p: Project) => p.category === 'ACTIVE');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -127,7 +128,7 @@ export default async function Home() {
             <h2 className="text-headline-md font-headline-md text-primary uppercase border-b border-outline-variant pb-2">INVENTORY (SKILLS)</h2>
             <div className="grid grid-cols-4 md:grid-cols-6 gap-px bg-[#333333] border border-[#333333]">
               {/* Skill Slots */}
-              {filledSlots.map((skill: any, idx: number) => (
+              {filledSlots.map((skill: Skill, idx: number) => (
                 <div 
                   key={idx} 
                   className="aspect-square bg-background flex flex-col items-center justify-center p-2 hover:bg-[#111111] border-2 border-transparent hover:border-brand-amber transition-none cursor-pointer group"
@@ -153,15 +154,15 @@ export default async function Home() {
             <span className="text-secondary font-code-sm text-xs">PAGE 01 / 01</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {activeProjects.map((project: any) => (
+            {activeProjects.map((project: Project) => (
               <article 
                 key={project.id} 
                 className="ruled-border bg-surface-container-lowest flex flex-col group hover:border-brand-amber transition-none"
               >
                 <div className="h-48 border-b border-outline-variant bg-[#111111] relative overflow-hidden flex items-center justify-center">
-                  <Image 
-                    alt={project.title} 
-                    src={project.image}
+                  <Image
+                    alt={project.title}
+                    src={project.image || '/images/network_nodes.png'}
                     width={128}
                     height={128}
                     className="object-contain opacity-80 group-hover:opacity-100 transition-opacity pixelated"

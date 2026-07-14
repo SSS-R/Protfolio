@@ -45,7 +45,7 @@ export default function ContactForm() {
         const errData = await res.json();
         setStatusMessage(`TRANSMISSION FAILED: ${errData.error || 'Unknown Error'}`);
       }
-    } catch (err) {
+    } catch {
       setStatusMessage('TRANSMISSION FAILED: NETWORK TIMEOUT.');
     } finally {
       setIsSending(false);

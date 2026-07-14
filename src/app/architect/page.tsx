@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import { readData } from '@/lib/store';
 import ClientArchitect from '@/components/ClientArchitect';
 

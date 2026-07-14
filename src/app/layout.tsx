@@ -97,14 +97,18 @@ export default async function RootLayout({
   const data = await getPortfolioData();
 
   return (
-    <html 
-      lang="en" 
+    <html
+      lang="en"
       className={`${inter.variable} ${ibmPlexMono.variable} ${jetbrainsMono.variable} ${pressStart2P.variable} ${yellowtail.variable} ${montserrat.variable} dark`}
     >
       <head>
-        {/* Load Google Material Symbols for design icons */}
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" 
+        {/*
+          Material Symbols is an icon font, not a text typeface — next/font/google
+          doesn't provide it, so it loads via <link>. Suppressing the text-font rule.
+        */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
       </head>

@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import type { Education, Experience, SkillLevel, Certification } from '@/types/portfolio';
 
 interface ClientArchitectProps {
-  education: any[];
-  experience: any[];
-  skillsAcquired: any[];
-  certifications: any[];
+  education: Education[];
+  experience: Experience[];
+  skillsAcquired: SkillLevel[];
+  certifications: Certification[];
 }
 
 export default function ClientArchitect({

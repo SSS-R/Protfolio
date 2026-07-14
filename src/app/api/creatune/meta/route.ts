@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { readData as readStore, writeData as writeStore } from '@/lib/store';
+import { requireAdmin } from '@/lib/auth';
 
 interface CreaTuneData {
   studio: string;
@@ -22,22 +23,9 @@ async function writeData(data: CreaTuneData) {
   await writeStore('creatune', data);
 }
 
-function checkAuth(request: Request): NextResponse | null {
-  const headerPassword = request.headers.get('x-admin-password');
-  const systemPassword = process.env.ADMIN_PASSWORD;
-
-  if (!systemPassword) {
-    return NextResponse.json({ error: 'Server misconfigured: ADMIN_PASSWORD not set' }, { status: 500 });
-  }
-  if (headerPassword !== systemPassword) {
-    return NextResponse.json({ error: 'Access Denied: Invalid credentials' }, { status: 401 });
-  }
-  return null;
-}
-
 // PATCH /api/creatune/meta - Update landing-page content: news + next release (Admin only)
 export async function PATCH(request: Request) {
-  const authError = checkAuth(request);
+  const authError = requireAdmin(request);
   if (authError) return authError;
 
   try {

@@ -4,10 +4,11 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useAdminAuthed, setAdminPassword } from '@/hooks/useAdminSession';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
-  portfolioData: any;
+  portfolioData: { profile?: Record<string, string> } | null;
 }
 
 // Equalizer-bar page wipe between the portfolio and the CreaTune music site.
@@ -60,17 +61,8 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
   const is404 = pathname === '/_not-found' || pathname === '/404' || pathname === '/not-found';
   const isMusicSection = pathname.startsWith('/music');
 
-  // Load state from sessionStorage or similar to check if already authenticated
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedPass = sessionStorage.getItem('admin_password');
-      if (storedPass) {
-        setIsAuthenticated(true);
-      }
-    }
-  }, []);
+  // Reactive admin-session flag (reads sessionStorage via an external store)
+  const isAuthenticated = useAdminAuthed();
 
   const handleOverrideSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,8 +84,7 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
       }
 
       if (res.status === 400 || res.ok) {
-        sessionStorage.setItem('admin_password', overridePassword);
-        setIsAuthenticated(true);
+        setAdminPassword(overridePassword);
         setIsCatModalOpen(false);
         setShowOverrideInput(false);
         setOverridePassword('');
@@ -271,8 +262,7 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
             <button 
               onClick={() => {
                 if (isAuthenticated) {
-                  sessionStorage.removeItem('admin_password');
-                  setIsAuthenticated(false);
+                  setAdminPassword(null);
                   router.push('/');
                 } else {
                   setIsCatModalOpen(true);

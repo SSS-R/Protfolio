@@ -1,105 +1,105 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useAdminAuthed, getAdminPassword, setAdminPassword } from '@/hooks/useAdminSession';
+import type {
+  PortfolioData,
+  ContactMessage,
+  Profile,
+  Project,
+  Education,
+  Experience,
+  RoadmapNode,
+  MusicTrack,
+  AboutInfo,
+  Skill,
+  TerminalCommand,
+} from '@/types/portfolio';
 
 type TabType = 'profile' | 'projects' | 'timeline' | 'skills-terminal' | 'about' | 'roadmap' | 'music' | 'inbox';
 
+// Immutable "replace item at index, merging a patch" — keeps updates type-safe.
+function replaceAt<T>(arr: T[], idx: number, patch: Partial<T>): T[] {
+  return arr.map((item, i) => (i === idx ? { ...item, ...patch } : item));
+}
+
 export default function Admin() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const isAuthenticated = useAdminAuthed();
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  
+
   // Data State
-  const [portfolioData, setPortfolioData] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [statusMessage, setStatusMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Authentication check
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedPass = sessionStorage.getItem('admin_password');
-      if (storedPass) {
-        setIsAuthenticated(true);
-        fetchData();
-        fetchMessages();
-      }
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/portfolio');
+      if (res.ok) setPortfolioData(await res.json());
+    } catch (err) {
+      console.error('Error fetching data:', err);
     }
   }, []);
 
-  // Fetch messages if tab switches to inbox
+  const fetchMessages = useCallback(async () => {
+    const storedPass = getAdminPassword() || '';
+    try {
+      const res = await fetch('/api/messages', { headers: { 'x-admin-password': storedPass } });
+      if (res.ok) setMessages(await res.json());
+    } catch (err) {
+      console.error('Error fetching messages:', err);
+    }
+  }, []);
+
+  // Load data once authenticated. These are async server fetches (setState runs
+  // after the response, not synchronously), so the set-state-in-effect rule is a
+  // false positive here — this is a legitimate external-system sync.
   useEffect(() => {
-    if (isAuthenticated && activeTab === 'inbox') {
+    if (isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchData();
       fetchMessages();
     }
-  }, [activeTab, isAuthenticated]);
+  }, [isAuthenticated, fetchData, fetchMessages]);
+
+  // Refetch the inbox when that tab opens
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (isAuthenticated && activeTab === 'inbox') fetchMessages();
+  }, [activeTab, isAuthenticated, fetchMessages]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       const res = await fetch('/api/portfolio', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-password': password
-        },
-        body: JSON.stringify({ ping: true })
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+        body: JSON.stringify({ ping: true }),
       });
 
       if (res.status === 401) {
         setLoginError('INVALID DECRYPT KEY');
         return;
       }
-
       if (res.status === 400 || res.ok) {
-        sessionStorage.setItem('admin_password', password);
-        setIsAuthenticated(true);
-        fetchData();
-        fetchMessages();
+        setAdminPassword(password);
+        setPassword('');
       } else {
         setLoginError('AUTH ERROR CODE: ' + res.status);
       }
-    } catch (err) {
+    } catch {
       setLoginError('CONNECTION ERROR');
     }
   };
 
-  const fetchData = async () => {
-    try {
-      const res = await fetch('/api/portfolio');
-      if (res.ok) {
-        const data = await res.json();
-        setPortfolioData(data);
-      }
-    } catch (err) {
-      console.error('Error fetching data:', err);
-    }
-  };
-
-  const fetchMessages = async () => {
-    const storedPass = sessionStorage.getItem('admin_password') || '';
-    try {
-      const res = await fetch('/api/messages', {
-        headers: {
-          'x-admin-password': storedPass
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(data);
-      }
-    } catch (err) {
-      console.error('Error fetching messages:', err);
-    }
-  };
-
   const handleSave = async () => {
-    const storedPass = sessionStorage.getItem('admin_password') || '';
+    const storedPass = getAdminPassword() || '';
     setIsSaving(true);
     setStatusMessage('SYNCHRONIZING DATA STORE...');
     try {
@@ -117,7 +117,7 @@ export default function Admin() {
         const errData = await res.json();
         setStatusMessage(`ERROR: ${errData.error || 'Failed to save'}`);
       }
-    } catch (err) {
+    } catch {
       setStatusMessage('ERROR: Connection failed.');
     } finally {
       setIsSaving(false);
@@ -126,7 +126,7 @@ export default function Admin() {
   };
 
   const handleDeleteMessage = async (id: string) => {
-    const storedPass = sessionStorage.getItem('admin_password') || '';
+    const storedPass = getAdminPassword() || '';
     setStatusMessage('DELETING TRANSMISSION RECORD...');
     try {
       const res = await fetch(`/api/messages?id=${id}`, {
@@ -142,7 +142,7 @@ export default function Admin() {
         const errData = await res.json();
         setStatusMessage(`DELETE ERROR: ${errData.error || 'Failed'}`);
       }
-    } catch (err) {
+    } catch {
       setStatusMessage('DELETE ERROR: Connection failed.');
     } finally {
       setTimeout(() => setStatusMessage(''), 3000);
@@ -153,7 +153,7 @@ export default function Admin() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const storedPass = sessionStorage.getItem('admin_password') || '';
+    const storedPass = getAdminPassword() || '';
     const formData = new FormData();
     formData.append('file', file);
     formData.append('filename', `${pathType}_${Date.now()}_${file.name}`);
@@ -170,24 +170,16 @@ export default function Admin() {
       if (res.ok) {
         const result = await res.json();
         if (pathType === 'avatar') {
-          setPortfolioData((prev: any) => ({
-            ...prev,
-            profile: { ...prev.profile, avatar: result.url }
-          }));
+          setPortfolioData((prev) => (prev ? { ...prev, profile: { ...prev.profile, avatar: result.url } } : prev));
         } else if (pathType === 'project' && projectIdx !== undefined) {
-          const updatedProjects = [...portfolioData.projects];
-          updatedProjects[projectIdx].image = result.url;
-          setPortfolioData((prev: any) => ({
-            ...prev,
-            projects: updatedProjects
-          }));
+          setPortfolioData((prev) => (prev ? { ...prev, projects: replaceAt(prev.projects, projectIdx, { image: result.url }) } : prev));
         }
         setStatusMessage('IMAGE UPLOAD COMPLETED.');
       } else {
         const errData = await res.json();
         setStatusMessage(`UPLOAD ERROR: ${errData.error || 'Failed'}`);
       }
-    } catch (err) {
+    } catch {
       setStatusMessage('UPLOAD ERROR: Connection failed.');
     } finally {
       setTimeout(() => setStatusMessage(''), 3000);
@@ -195,50 +187,30 @@ export default function Admin() {
   };
 
   // Helper updates
-  const updateProfileField = (field: string, value: any) => {
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      profile: { ...prev.profile, [field]: value }
-    }));
-  };
+  const updateProfileField = (field: keyof Profile, value: string) =>
+    setPortfolioData((prev) => (prev ? { ...prev, profile: { ...prev.profile, [field]: value } } : prev));
 
-  const updateNowBuilding = (value: string) => {
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      nowBuilding: value
-    }));
-  };
+  const updateNowBuilding = (value: string) =>
+    setPortfolioData((prev) => (prev ? { ...prev, nowBuilding: value } : prev));
 
   // About updates
-  const updateAboutField = (field: string, value: any) => {
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      about: { ...prev.about, [field]: value }
-    }));
-  };
+  const updateAboutField = (field: keyof AboutInfo, value: string | string[]) =>
+    setPortfolioData((prev) => (prev ? { ...prev, about: { ...prev.about, [field]: value } } : prev));
 
   // Skills toggle helper
-  const handleSkillEquipToggle = (idx: number) => {
-    const updatedSkills = [...portfolioData.skills];
-    updatedSkills[idx].equipped = !updatedSkills[idx].equipped;
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      skills: updatedSkills
-    }));
-  };
+  const handleSkillEquipToggle = (idx: number) =>
+    setPortfolioData((prev) =>
+      prev ? { ...prev, skills: replaceAt(prev.skills, idx, { equipped: !prev.skills[idx].equipped }) } : prev
+    );
 
   // Project managers
-  const updateProjectField = (idx: number, field: string, value: any) => {
-    const updatedProjects = [...portfolioData.projects];
-    updatedProjects[idx][field] = value;
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      projects: updatedProjects
-    }));
-  };
+  const updateProjectField = (idx: number, field: keyof Project, value: string | string[]) =>
+    setPortfolioData((prev) =>
+      prev ? { ...prev, projects: replaceAt(prev.projects, idx, { [field]: value } as Partial<Project>) } : prev
+    );
 
   const handleAddProject = () => {
-    const newProj = {
+    const newProj: Project = {
       id: `new-project-${Date.now()}`,
       title: 'NEW PROJECT',
       subtitle: 'BETA',
@@ -247,159 +219,110 @@ export default function Admin() {
       image: '/images/network_nodes.png',
       status: 'IN PROGRESS',
       category: 'ACTIVE',
-      link: '#'
+      link: '#',
     };
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      projects: [...prev.projects, newProj]
-    }));
+    setPortfolioData((prev) => (prev ? { ...prev, projects: [...prev.projects, newProj] } : prev));
   };
 
-  const handleDeleteProject = (idx: number) => {
-    const updatedProjects = portfolioData.projects.filter((_: any, i: number) => i !== idx);
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      projects: updatedProjects
-    }));
-  };
+  const handleDeleteProject = (idx: number) =>
+    setPortfolioData((prev) => (prev ? { ...prev, projects: prev.projects.filter((_, i) => i !== idx) } : prev));
 
   // CV Timeline managers
-  const updateTimelineField = (type: 'education' | 'experience', itemIdx: number, field: string, value: any) => {
-    const updatedItems = [...portfolioData[type]];
-    updatedItems[itemIdx][field] = value;
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      [type]: updatedItems
-    }));
-  };
+  const updateTimelineField = (type: 'education' | 'experience', itemIdx: number, field: string, value: string) =>
+    setPortfolioData((prev) => {
+      if (!prev) return prev;
+      if (type === 'education')
+        return { ...prev, education: replaceAt(prev.education, itemIdx, { [field]: value } as Partial<Education>) };
+      return { ...prev, experience: replaceAt(prev.experience, itemIdx, { [field]: value } as Partial<Experience>) };
+    });
 
-  const updateTimelineBullets = (type: 'education' | 'experience', itemIdx: number, bulletIdx: number, value: string) => {
-    const updatedItems = [...portfolioData[type]];
-    updatedItems[itemIdx].bullets[bulletIdx] = value;
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      [type]: updatedItems
-    }));
-  };
+  const updateTimelineBullets = (type: 'education' | 'experience', itemIdx: number, bulletIdx: number, value: string) =>
+    setPortfolioData((prev) => {
+      if (!prev) return prev;
+      const bullets = prev[type][itemIdx].bullets.map((b, i) => (i === bulletIdx ? value : b));
+      if (type === 'education') return { ...prev, education: replaceAt(prev.education, itemIdx, { bullets }) };
+      return { ...prev, experience: replaceAt(prev.experience, itemIdx, { bullets }) };
+    });
 
-  const handleAddTimelineBullet = (type: 'education' | 'experience', itemIdx: number) => {
-    const updatedItems = [...portfolioData[type]];
-    if (!updatedItems[itemIdx].bullets) updatedItems[itemIdx].bullets = [];
-    updatedItems[itemIdx].bullets.push('New detail');
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      [type]: updatedItems
-    }));
-  };
+  const handleAddTimelineBullet = (type: 'education' | 'experience', itemIdx: number) =>
+    setPortfolioData((prev) => {
+      if (!prev) return prev;
+      const bullets = [...prev[type][itemIdx].bullets, 'New detail'];
+      if (type === 'education') return { ...prev, education: replaceAt(prev.education, itemIdx, { bullets }) };
+      return { ...prev, experience: replaceAt(prev.experience, itemIdx, { bullets }) };
+    });
 
-  const handleRemoveTimelineBullet = (type: 'education' | 'experience', itemIdx: number, bulletIdx: number) => {
-    const updatedItems = [...portfolioData[type]];
-    updatedItems[itemIdx].bullets = updatedItems[itemIdx].bullets.filter((_: any, i: number) => i !== bulletIdx);
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      [type]: updatedItems
-    }));
-  };
+  const handleRemoveTimelineBullet = (type: 'education' | 'experience', itemIdx: number, bulletIdx: number) =>
+    setPortfolioData((prev) => {
+      if (!prev) return prev;
+      const bullets = prev[type][itemIdx].bullets.filter((_, i) => i !== bulletIdx);
+      if (type === 'education') return { ...prev, education: replaceAt(prev.education, itemIdx, { bullets }) };
+      return { ...prev, experience: replaceAt(prev.experience, itemIdx, { bullets }) };
+    });
 
-  const handleAddTimelineItem = (type: 'education' | 'experience') => {
-    const newItem = type === 'education' ? {
-      yearRange: '[ 2024 - 2026 ]',
-      institution: 'New Institution',
-      degree: 'Degree Name',
-      bullets: ['Major details']
-    } : {
-      yearRange: '[ 2024 - PRESENT ]',
-      role: 'Role Title',
-      company: 'Company Name',
-      bullets: ['Responsible for...']
-    };
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      [type]: [...prev[type], newItem]
-    }));
-  };
+  const handleAddTimelineItem = (type: 'education' | 'experience') =>
+    setPortfolioData((prev) => {
+      if (!prev) return prev;
+      if (type === 'education') {
+        const item: Education = { yearRange: '[ 2024 - 2026 ]', institution: 'New Institution', degree: 'Degree Name', bullets: ['Major details'] };
+        return { ...prev, education: [...prev.education, item] };
+      }
+      const item: Experience = { yearRange: '[ 2024 - PRESENT ]', role: 'Role Title', company: 'Company Name', bullets: ['Responsible for...'] };
+      return { ...prev, experience: [...prev.experience, item] };
+    });
 
-  const handleDeleteTimelineItem = (type: 'education' | 'experience', idx: number) => {
-    const updatedItems = portfolioData[type].filter((_: any, i: number) => i !== idx);
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      [type]: updatedItems
-    }));
-  };
+  const handleDeleteTimelineItem = (type: 'education' | 'experience', idx: number) =>
+    setPortfolioData((prev) => {
+      if (!prev) return prev;
+      if (type === 'education') return { ...prev, education: prev.education.filter((_, i) => i !== idx) };
+      return { ...prev, experience: prev.experience.filter((_, i) => i !== idx) };
+    });
 
   // Roadmap tree managers
-  const updateRoadmapField = (idx: number, field: string, value: any) => {
-    const updatedRoadmap = [...portfolioData.roadmap];
-    updatedRoadmap[idx][field] = value;
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      roadmap: updatedRoadmap
-    }));
-  };
+  const updateRoadmapField = (idx: number, field: keyof RoadmapNode, value: string) =>
+    setPortfolioData((prev) =>
+      prev ? { ...prev, roadmap: replaceAt(prev.roadmap, idx, { [field]: value } as Partial<RoadmapNode>) } : prev
+    );
 
   const handleAddRoadmapNode = () => {
-    const newNode = {
+    const newNode: RoadmapNode = {
       id: `node-${Date.now()}`,
       title: 'NEW QUEST NODE',
       description: 'Quest details and summary.',
       type: 'aim',
       status: 'locked',
-      year: 'Future'
+      year: 'Future',
     };
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      roadmap: [...prev.roadmap, newNode]
-    }));
+    setPortfolioData((prev) => (prev ? { ...prev, roadmap: [...prev.roadmap, newNode] } : prev));
   };
 
-  const handleDeleteRoadmapNode = (idx: number) => {
-    const updatedRoadmap = portfolioData.roadmap.filter((_: any, i: number) => i !== idx);
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      roadmap: updatedRoadmap
-    }));
-  };
+  const handleDeleteRoadmapNode = (idx: number) =>
+    setPortfolioData((prev) => (prev ? { ...prev, roadmap: prev.roadmap.filter((_, i) => i !== idx) } : prev));
 
-  // Music track managers
-  const updateTrackField = (idx: number, field: string, value: any) => {
-    const updatedTracks = [...portfolioData.tracks];
-    updatedTracks[idx][field] = value;
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      tracks: updatedTracks
-    }));
-  };
+  // Music track managers (legacy portfolio audio deck)
+  const updateTrackField = (idx: number, field: keyof MusicTrack, value: string) =>
+    setPortfolioData((prev) =>
+      prev ? { ...prev, tracks: replaceAt(prev.tracks ?? [], idx, { [field]: value } as Partial<MusicTrack>) } : prev
+    );
 
   const handleAddTrack = () => {
-    const newTrack = {
+    const newTrack: MusicTrack = {
       id: `track-${Date.now()}`,
       title: 'NEW_SONG.mp3',
       duration: '04:20',
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
     };
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      tracks: [...prev.tracks, newTrack]
-    }));
+    setPortfolioData((prev) => (prev ? { ...prev, tracks: [...(prev.tracks ?? []), newTrack] } : prev));
   };
 
-  const handleDeleteTrack = (idx: number) => {
-    const updatedTracks = portfolioData.tracks.filter((_: any, i: number) => i !== idx);
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      tracks: updatedTracks
-    }));
-  };
+  const handleDeleteTrack = (idx: number) =>
+    setPortfolioData((prev) => (prev ? { ...prev, tracks: (prev.tracks ?? []).filter((_, i) => i !== idx) } : prev));
 
   // Terminal commands managers
-  const updateTerminalResponse = (idx: number, val: string) => {
-    const updatedTerminal = [...portfolioData.terminalCommands];
-    updatedTerminal[idx].response = val;
-    setPortfolioData((prev: any) => ({
-      ...prev,
-      terminalCommands: updatedTerminal
-    }));
-  };
+  const updateTerminalResponse = (idx: number, val: string) =>
+    setPortfolioData((prev) =>
+      prev ? { ...prev, terminalCommands: replaceAt(prev.terminalCommands, idx, { response: val }) } : prev
+    );
 
   // Render Login state if not authenticated
   if (!isAuthenticated) {
@@ -686,7 +609,7 @@ export default function Admin() {
             </div>
 
             <div className="flex flex-col gap-6">
-              {portfolioData.roadmap?.map((node: any, idx: number) => (
+              {portfolioData.roadmap?.map((node: RoadmapNode, idx: number) => (
                 <div key={node.id} className="border border-brand-ruled p-6 bg-background flex flex-col gap-4 relative">
                   <button 
                     onClick={() => handleDeleteRoadmapNode(idx)}
@@ -769,7 +692,7 @@ export default function Admin() {
             </div>
 
             <div className="grid grid-cols-1 gap-8">
-              {portfolioData.projects.map((proj: any, idx: number) => (
+              {portfolioData.projects.map((proj: Project, idx: number) => (
                 <div key={proj.id} className="border border-brand-ruled p-6 bg-background flex flex-col gap-4 relative">
                   <button 
                     onClick={() => handleDeleteProject(idx)}
@@ -855,9 +778,9 @@ export default function Admin() {
                     
                     <div className="flex gap-4 items-end border border-dashed border-brand-ruled p-3">
                       <div className="w-12 h-12 border border-[#333333] bg-surface flex items-center justify-center relative overflow-hidden shrink-0">
-                        <Image 
-                          alt="Project Preview" 
-                          src={proj.image}
+                        <Image
+                          alt="Project Preview"
+                          src={proj.image || '/images/network_nodes.png'}
                           width={32}
                           height={32}
                           className="object-contain pixelated"
@@ -909,7 +832,7 @@ export default function Admin() {
               </div>
 
               <div className="flex flex-col gap-6">
-                {portfolioData.education.map((edu: any, idx: number) => (
+                {portfolioData.education.map((edu: Education, idx: number) => (
                   <div key={idx} className="border border-brand-ruled p-6 bg-background relative flex flex-col gap-4">
                     <button 
                       onClick={() => handleDeleteTimelineItem('education', idx)}
@@ -998,7 +921,7 @@ export default function Admin() {
               </div>
 
               <div className="flex flex-col gap-6">
-                {portfolioData.experience.map((exp: any, idx: number) => (
+                {portfolioData.experience.map((exp: Experience, idx: number) => (
                   <div key={idx} className="border border-brand-ruled p-6 bg-background relative flex flex-col gap-4">
                     <button 
                       onClick={() => handleDeleteTimelineItem('experience', idx)}
@@ -1083,7 +1006,7 @@ export default function Admin() {
             <div className="lg:col-span-5 flex flex-col gap-4">
               <h2 className="text-headline-sm font-headline-md text-brand-amber border-b border-brand-ruled pb-2 uppercase">EQUIPPED SKILLS INVENTORY</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 border border-brand-ruled p-4 bg-background">
-                {portfolioData.skills.map((skill: any, idx: number) => (
+                {portfolioData.skills.map((skill: Skill, idx: number) => (
                   <button
                     key={skill.name}
                     type="button"
@@ -1106,7 +1029,7 @@ export default function Admin() {
             <div className="lg:col-span-7 flex flex-col gap-4">
               <h2 className="text-headline-sm font-headline-md text-brand-amber border-b border-brand-ruled pb-2 uppercase">TERMINAL COMMAND OVERRIDES</h2>
               <div className="flex flex-col gap-4">
-                {portfolioData.terminalCommands.map((tc: any, idx: number) => (
+                {portfolioData.terminalCommands.map((tc: TerminalCommand, idx: number) => (
                   <div key={tc.command} className="border border-brand-ruled p-4 bg-background flex flex-col gap-2">
                     <span className="text-primary font-code-sm font-bold">COMMAND: <span className="text-brand-amber">{tc.command}</span></span>
                     <textarea 
@@ -1136,7 +1059,7 @@ export default function Admin() {
             </div>
 
             <div className="flex flex-col gap-6">
-              {portfolioData.tracks?.map((track: any, idx: number) => (
+              {portfolioData.tracks?.map((track: MusicTrack, idx: number) => (
                 <div key={track.id} className="border border-brand-ruled p-6 bg-background relative flex flex-col gap-4">
                   <button 
                     onClick={() => handleDeleteTrack(idx)}

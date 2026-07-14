@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { readData, writeData } from '@/lib/store';
+import { requireAdmin } from '@/lib/auth';
 
 // GET /api/portfolio
 export async function GET() {
@@ -15,17 +16,8 @@ export async function GET() {
 // POST /api/portfolio
 export async function POST(request: Request) {
   try {
-    // Basic password validation
-    const headerPassword = request.headers.get('x-admin-password');
-    const systemPassword = process.env.ADMIN_PASSWORD;
-
-    if (!systemPassword) {
-      return NextResponse.json({ error: 'Server misconfigured: ADMIN_PASSWORD not set' }, { status: 500 });
-    }
-
-    if (headerPassword !== systemPassword) {
-      return NextResponse.json({ error: 'Access Denied: Invalid credentials' }, { status: 401 });
-    }
+    const authError = requireAdmin(request);
+    if (authError) return authError;
 
     const body = await request.json();
     
