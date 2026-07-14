@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import type { Education, Experience, SkillLevel, Certification } from '@/types/portfolio';
+import { Reveal } from './motion';
 
 interface ClientArchitectProps {
   education: Education[];
@@ -76,8 +77,8 @@ export default function ClientArchitect({
       `}</style>
 
       {/* Main Content Layout */}
-      <div className="flex-1 p-4 md:p-12 grid grid-cols-1 md:grid-cols-12 gap-8 relative pb-32 print:p-0 print:gap-4 print:pb-0">
-        
+      <Reveal as="div" preset="hud" className="flex-1 p-4 md:p-12 grid grid-cols-1 md:grid-cols-12 gap-8 relative pb-32 print:p-0 print:gap-4 print:pb-0">
+
         {/* Page Header */}
         <div className="col-span-1 md:col-span-12 border border-brand-ruled p-6 relative bg-brand-dark/80 backdrop-blur-sm print:bg-white print:border-black">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -207,7 +208,7 @@ export default function ClientArchitect({
             </div>
           )}
         </section>
-      </div>
+      </Reveal>
 
       {/* Floating Action Button (Print to PDF) */}
       <div className="fixed bottom-16 right-4 md:right-12 z-40 print-btn-container pointer-events-none">

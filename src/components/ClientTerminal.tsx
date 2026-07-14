@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Reveal } from './motion';
 
 interface TerminalCommand {
   command: string;
@@ -111,7 +112,7 @@ export default function ClientTerminal({ initialCommands }: ClientTerminalProps)
   };
 
   return (
-    <div className="flex-1 flex flex-col p-4 md:p-8 overflow-hidden relative z-20 min-h-[calc(100vh-64px)]">
+    <Reveal as="div" preset="hud" className="flex-1 flex flex-col p-4 md:p-8 overflow-hidden relative z-20 min-h-[calc(100vh-64px)]">
       {/* Main Terminal Container */}
       <div 
         onClick={handleTerminalClick}
@@ -188,6 +189,6 @@ export default function ClientTerminal({ initialCommands }: ClientTerminalProps)
         <span>TERMINAL: CONNECTION: ESTABLISHED</span>
         <span>LATENCY: {latency}ms</span>
       </div>
-    </div>
+    </Reveal>
   );
 }
