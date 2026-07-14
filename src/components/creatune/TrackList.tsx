@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { usePlayer, PlayIcon, PauseIcon } from '../CreaTunePlayer';
+import { RevealGroup, RevealItem } from '../motion';
 import type { CreaTuneTrack } from '../creatune-types';
 
 // A reusable list of tracks. Playing a row queues the whole `list`,
@@ -21,11 +22,11 @@ export default function TrackList({
   }
 
   return (
-    <ol>
+    <RevealGroup as="ol" preset="smooth">
       {list.map((track, index) => {
         const active = isCurrent(track.id);
         return (
-          <li key={track.id} className="border-b border-white/[0.04] last:border-0">
+          <RevealItem as="li" key={track.id} preset="smooth" className="border-b border-white/[0.04] last:border-0">
             <button
               onClick={() => playFrom(list, index)}
               className={`w-full grid grid-cols-[2.5rem_1fr_auto] md:grid-cols-[3.5rem_1fr_8rem_5rem_3rem] items-center gap-3 md:gap-6 py-4 px-4 md:px-6 text-left group transition-colors duration-200 cursor-pointer ${
@@ -75,9 +76,9 @@ export default function TrackList({
                 {active && isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
               </span>
             </button>
-          </li>
+          </RevealItem>
         );
       })}
-    </ol>
+    </RevealGroup>
   );
 }

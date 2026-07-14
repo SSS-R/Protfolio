@@ -1,6 +1,6 @@
 import React from 'react';
 import { readData } from '@/lib/store';
-import { Reveal } from '@/components/motion';
+import { Reveal, RevealGroup, RevealItem } from '@/components/motion';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getPortfolioData(): Promise<any> {
@@ -44,25 +44,25 @@ export default async function AboutPage() {
         </div>
 
         {/* Biography Section */}
-        <section className="md:col-span-8 border border-brand-ruled bg-surface p-6 flex flex-col gap-6">
-          <div>
+        <RevealGroup as="section" preset="hud" className="md:col-span-8 border border-brand-ruled bg-surface p-6 flex flex-col gap-6">
+          <RevealItem preset="hud">
             <h2 className="text-headline-md font-headline-md text-primary border-b border-brand-ruled pb-4 mb-4 uppercase">
               BIOGRAPHY
             </h2>
             <p className="text-body-md text-secondary leading-relaxed font-code-sm text-justify">
               {about.biography}
             </p>
-          </div>
+          </RevealItem>
 
-          <div>
+          <RevealItem preset="hud">
             <h2 className="text-headline-md font-headline-md text-primary border-b border-brand-ruled pb-4 mb-4 uppercase">
               PRIMARY_AIMS
             </h2>
             <p className="text-body-md text-secondary leading-relaxed font-code-sm text-justify">
               {about.aims}
             </p>
-          </div>
-        </section>
+          </RevealItem>
+        </RevealGroup>
 
         {/* Specialization HUD Sidebar */}
         <section className="md:col-span-4 flex flex-col gap-6">
@@ -71,14 +71,19 @@ export default async function AboutPage() {
               <span className="material-symbols-outlined text-sm">security</span>
               AREAS_OF_FOCUS
             </h3>
-            <ul className="flex flex-col gap-3 font-code-sm text-secondary">
+            <RevealGroup as="ul" preset="hud" className="flex flex-col gap-3 font-code-sm text-secondary">
               {about.interests.map((interest: string, idx: number) => (
-                <li key={idx} className="flex gap-2 items-start border border-[#333] p-2 bg-background hover:border-brand-amber hover:text-brand-amber cursor-default">
+                <RevealItem
+                  key={idx}
+                  as="li"
+                  preset="hud"
+                  className="flex gap-2 items-start border border-[#333] p-2 bg-background hover:border-brand-amber hover:text-brand-amber cursor-default"
+                >
                   <span className="text-brand-amber font-bold">&gt;</span>
                   <span>{interest}</span>
-                </li>
+                </RevealItem>
               ))}
-            </ul>
+            </RevealGroup>
           </div>
         </section>
 

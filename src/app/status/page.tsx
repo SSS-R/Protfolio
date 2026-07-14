@@ -1,6 +1,6 @@
 import React from 'react';
 import { readData } from '@/lib/store';
-import { Reveal } from '@/components/motion';
+import { Reveal, RevealGroup, RevealItem } from '@/components/motion';
 import type { RoadmapNode } from '@/types/portfolio';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,15 +64,16 @@ export default async function StatusPage() {
             LIFE_ACTIVITY_TREE
           </h2>
 
-          <div className="relative pl-8 border-l border-brand-ruled space-y-12">
+          <RevealGroup preset="hud" className="relative pl-8 border-l border-brand-ruled space-y-12">
             {roadmap.map((node: RoadmapNode) => {
               const isCompleted = node.status === 'completed';
               const isActive = node.status === 'active';
               const isLocked = node.status === 'locked';
 
               return (
-                <div 
-                  key={node.id} 
+                <RevealItem
+                  key={node.id}
+                  preset="hud"
                   className={`relative flex flex-col md:flex-row gap-4 md:items-start transition-opacity duration-300 ${
                     isLocked ? 'opacity-40 hover:opacity-60' : 'opacity-100'
                   }`}
@@ -119,10 +120,10 @@ export default async function StatusPage() {
                       {node.description}
                     </p>
                   </div>
-                </div>
+                </RevealItem>
               );
             })}
-          </div>
+          </RevealGroup>
         </section>
 
         {/* Quest HUD dashboard (Right col) */}

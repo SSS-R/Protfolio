@@ -83,8 +83,8 @@ export default function LandingView() {
 
       {/* CATALOGUE + LATEST RELEASE */}
       {tracks.length > 0 && (
-        <Reveal as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex items-center gap-4 md:gap-5">
+        <RevealGroup as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <RevealItem preset="smooth" className="md:col-span-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex items-center gap-4 md:gap-5">
             <Image src={coverFor(latest)} alt="" width={72} height={72} className="rounded-[14px] border border-white/10 shrink-0 w-14 h-14 md:w-[72px] md:h-[72px] object-cover" />
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0] font-[family-name:var(--font-display)]">Latest release</p>
@@ -103,9 +103,9 @@ export default function LandingView() {
                 {current?.id === latest.id && isPlaying ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
               </button>
             )}
-          </div>
+          </RevealItem>
 
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex flex-col justify-between">
+          <RevealItem preset="smooth" className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex flex-col justify-between">
             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Catalogue</p>
             <div className="mt-4 flex items-end justify-between gap-4">
               <div>
@@ -117,22 +117,22 @@ export default function LandingView() {
                 <p className="text-[10px] uppercase tracking-[0.2em] text-[#9BA0B4] mt-1.5">Total listens</p>
               </div>
             </div>
-          </div>
-        </Reveal>
+          </RevealItem>
+        </RevealGroup>
       )}
 
       {/* NEWS + NEXT RELEASE */}
       {(news?.title || news?.body || hasNextRelease) && (
-        <Reveal as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <RevealGroup as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
           {(news?.title || news?.body) && (
-            <div className={`rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 ${hasNextRelease ? 'md:col-span-2' : 'md:col-span-3'}`}>
+            <RevealItem preset="smooth" className={`rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 ${hasNextRelease ? 'md:col-span-2' : 'md:col-span-3'}`}>
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0] font-[family-name:var(--font-display)]">News</p>
               {news?.title && <p className="mt-2 text-xl font-bold tracking-tight">{news.title}</p>}
               {news?.body && <p className="mt-2 text-sm leading-7 text-[#CFCDDE] whitespace-pre-wrap">{news.body}</p>}
-            </div>
+            </RevealItem>
           )}
           {hasNextRelease && (
-            <div className="rounded-2xl border border-[#A9A3CE]/25 bg-[#A9A3CE]/[0.05] backdrop-blur-sm p-5 md:p-6 flex flex-col">
+            <RevealItem preset="smooth" className="rounded-2xl border border-[#A9A3CE]/25 bg-[#A9A3CE]/[0.05] backdrop-blur-sm p-5 md:p-6 flex flex-col">
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#A9A3CE] font-[family-name:var(--font-display)]">Next release</p>
               <div className="mt-3 flex items-center gap-4">
                 <Image src={nextRelease?.cover || LOGO_FALLBACK} alt="" width={64} height={64} className="rounded-xl border border-white/10 object-cover w-16 h-16 shrink-0" />
@@ -142,9 +142,9 @@ export default function LandingView() {
                 </div>
               </div>
               {nextRelease?.note && <p className="mt-3 text-sm leading-6 text-[#CFCDDE] whitespace-pre-wrap">{nextRelease.note}</p>}
-            </div>
+            </RevealItem>
           )}
-        </Reveal>
+        </RevealGroup>
       )}
 
       {/* FEATURED / TOP SONGS */}
@@ -173,17 +173,19 @@ export default function LandingView() {
               All albums →
             </Link>
           </div>
-          <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <RevealGroup preset="smooth" className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {albums.slice(0, 4).map((a) => (
-              <Link key={a.id} href={`/music/albums/${a.id}`} className="group">
-                <div className="aspect-square rounded-xl overflow-hidden border border-white/10">
-                  <Image src={a.cover || LOGO_FALLBACK} alt="" width={300} height={300} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                </div>
-                <p className="mt-2 font-bold truncate">{a.title}</p>
-                <p className="text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4]">{a.year || 'Album'}</p>
-              </Link>
+              <RevealItem key={a.id} preset="smooth">
+                <Link href={`/music/albums/${a.id}`} className="group">
+                  <div className="aspect-square rounded-xl overflow-hidden border border-white/10">
+                    <Image src={a.cover || LOGO_FALLBACK} alt="" width={300} height={300} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  </div>
+                  <p className="mt-2 font-bold truncate">{a.title}</p>
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4]">{a.year || 'Album'}</p>
+                </Link>
+              </RevealItem>
             ))}
-          </div>
+          </RevealGroup>
         </Reveal>
       )}
 

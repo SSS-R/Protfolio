@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useCurtain } from './ClientLayout';
+import { PageTransition } from './motion';
 import type {
   CreaTuneTrack,
   CreaTuneAlbum,
@@ -359,7 +360,9 @@ export default function CreaTunePlayerProvider({
         </header>
 
         {/* Page content */}
-        <main className="relative z-10 flex-1 w-full pb-40">{children}</main>
+        <main className="relative z-10 flex-1 w-full pb-40">
+          <PageTransition preset="smooth">{children}</PageTransition>
+        </main>
 
         {/* Lyrics panel */}
         {showLyrics && (

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import type { Education, Experience, SkillLevel, Certification } from '@/types/portfolio';
-import { Reveal } from './motion';
+import { Reveal, RevealGroup, RevealItem } from './motion';
 
 interface ClientArchitectProps {
   education: Education[];
@@ -104,9 +104,9 @@ export default function ClientArchitect({
             <span className="material-symbols-outlined text-brand-amber print:text-black">school</span>
             ACADEMY_LOG
           </h2>
-          <div className="relative pl-6 border-l-2 border-brand-amber space-y-8 print:border-black">
+          <RevealGroup preset="fade" className="relative pl-6 border-l-2 border-brand-amber space-y-8 print:border-black">
             {education.map((edu, idx) => (
-              <div key={idx} className="relative">
+              <RevealItem key={idx} preset="fade" className="relative">
                 <div className="absolute -left-[31px] top-1 w-3 h-3 bg-brand-dark border-2 border-brand-amber print:bg-white print:border-black"></div>
                 <div className="text-code-sm font-code-sm text-brand-amber mb-1 print:text-black">{edu.yearRange}</div>
                 <h3 className="text-body-lg font-headline-md text-primary font-bold print:text-black">{edu.institution}</h3>
@@ -119,9 +119,9 @@ export default function ClientArchitect({
                     </li>
                   ))}
                 </ul>
-              </div>
+              </RevealItem>
             ))}
-          </div>
+          </RevealGroup>
         </section>
 
         {/* FIELD_EXPERIENCE (Work History) */}
@@ -130,9 +130,9 @@ export default function ClientArchitect({
             <span className="material-symbols-outlined text-brand-amber print:text-black">work</span>
             FIELD_EXPERIENCE
           </h2>
-          <div className="relative pl-6 border-l-2 border-brand-amber space-y-8 print:border-black">
+          <RevealGroup preset="fade" className="relative pl-6 border-l-2 border-brand-amber space-y-8 print:border-black">
             {experience.map((exp, idx) => (
-              <div key={idx} className="relative">
+              <RevealItem key={idx} preset="fade" className="relative">
                 <div className="absolute -left-[31px] top-1 w-3 h-3 bg-brand-dark border-2 border-brand-amber print:bg-white print:border-black"></div>
                 <div className="text-code-sm font-code-sm text-brand-amber mb-1 print:text-black">{exp.yearRange}</div>
                 <h3 className="text-body-lg font-headline-md text-primary font-bold print:text-black">{exp.role}</h3>
@@ -145,9 +145,9 @@ export default function ClientArchitect({
                     </li>
                   ))}
                 </ul>
-              </div>
+              </RevealItem>
             ))}
-          </div>
+          </RevealGroup>
         </section>
 
         {/* ACQUIRED_SKILLS (XP Skill Bars) */}
@@ -156,24 +156,24 @@ export default function ClientArchitect({
             <span className="material-symbols-outlined text-brand-amber print:text-black">memory</span>
             ACQUIRED_SKILLS
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+          <RevealGroup preset="fade" className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
             {/* Split skills list into two columns dynamically */}
             {skillsAcquired.map((skill, idx) => (
-              <div key={idx}>
+              <RevealItem key={idx} preset="fade">
                 <div className="flex items-center gap-4">
                   <span className="text-code-sm font-code-sm text-primary w-24 truncate print:text-black">{skill.name}</span>
                   <div className="flex-1 h-3 xp-bar-bg flex bg-[#333333]">
-                    <div 
-                      className="h-full xp-bar-fill border-r border-brand-dark bg-brand-amber" 
+                    <div
+                      className="h-full xp-bar-fill border-r border-brand-dark bg-brand-amber"
                       style={{ width: `${skill.level}%` }}
                     ></div>
                     <div style={{ width: `${100 - skill.level}%` }}></div>
                   </div>
                   <span className="text-pixel-label font-pixel-label text-brand-amber w-8 text-right text-[10px] print:text-black">{skill.level}</span>
                 </div>
-              </div>
+              </RevealItem>
             ))}
-          </div>
+          </RevealGroup>
         </section>
 
         {/* CERTIFICATIONS */}
@@ -198,14 +198,14 @@ export default function ClientArchitect({
               </p>
             </div>
           ) : (
-            <div className="w-full flex flex-col gap-4 mt-4 mb-auto">
+            <RevealGroup preset="fade" className="w-full flex flex-col gap-4 mt-4 mb-auto">
               {certifications.map((cert, idx) => (
-                <div key={idx} className="border border-brand-ruled p-3 bg-surface-container-low flex flex-col gap-1 print:bg-white print:border-black">
+                <RevealItem key={idx} preset="fade" className="border border-brand-ruled p-3 bg-surface-container-low flex flex-col gap-1 print:bg-white print:border-black">
                   <span className="text-code-sm font-bold text-primary print:text-black">{cert.name}</span>
                   <span className="text-[10px] font-code-sm text-secondary print:text-black">{cert.issuer} ({cert.year})</span>
-                </div>
+                </RevealItem>
               ))}
-            </div>
+            </RevealGroup>
           )}
         </section>
       </Reveal>

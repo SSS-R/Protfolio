@@ -70,6 +70,7 @@
    Songs/Albums pages). */
 html {
   scrollbar-gutter: stable;
+  scroll-behavior: smooth;
 }
 
 /* Custom CSS global defaults */
@@ -330,6 +331,10 @@ body {
 /* Respect users who prefer less motion: stop decorative animations,
    keep the marquee text readable in place */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .blinking-cursor::after,
   .marquee-content,
   .scanline,

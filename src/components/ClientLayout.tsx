@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAdminAuthed, setAdminPassword } from '@/hooks/useAdminSession';
+import { PageTransition } from './motion';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -371,7 +372,7 @@ export default function ClientLayout({ children, portfolioData }: ClientLayoutPr
       {/* Main Page Area */}
       <div className="flex-1 flex flex-col min-h-0 lg:pl-64">
         <main className="flex-1 w-full relative">
-          {children}
+          <PageTransition preset="hud">{children}</PageTransition>
         </main>
 
         {/* Footer */}

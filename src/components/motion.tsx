@@ -1,6 +1,7 @@
 'use client';
 
-import { motion, useReducedMotion, type Transition } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion, type Transition } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 /**
@@ -30,7 +31,7 @@ interface RevealProps {
   preset?: Preset;
   delay?: number;
   className?: string;
-  as?: 'div' | 'section' | 'li';
+  as?: 'div' | 'section' | 'li' | 'ul' | 'ol';
 }
 
 /** Reveal a block as it scrolls into view (once). Safe in flex/block/grid flow. */
@@ -63,12 +64,17 @@ export function Reveal({ children, preset = 'smooth', delay = 0, className, as =
 }
 
 /** Container that cascades its <RevealItem> children in as it enters view. */
-export function RevealGroup({ children, preset = 'smooth', className }: RevealProps) {
+export function RevealGroup({ children, preset = 'smooth', className, as = 'div' }: RevealProps) {
   const reduce = useReducedMotion();
-  if (reduce) return <div className={className}>{children}</div>;
+  const Tag = motion[as];
+
+  if (reduce) {
+    const Plain = as;
+    return <Plain className={className}>{children}</Plain>;
+  }
 
   return (
-    <motion.div
+    <Tag
       className={className}
       initial="hidden"
       whileInView="show"
@@ -76,22 +82,59 @@ export function RevealGroup({ children, preset = 'smooth', className }: RevealPr
       variants={{ show: { transition: { staggerChildren: PRESET[preset].stagger } } }}
     >
       {children}
-    </motion.div>
+    </Tag>
   );
 }
 
 /** A single staggered child inside a <RevealGroup>. */
-export function RevealItem({ children, preset = 'smooth', className }: RevealProps) {
+export function RevealItem({ children, preset = 'smooth', className, as = 'div' }: RevealProps) {
   const reduce = useReducedMotion();
   const p = PRESET[preset];
-  if (reduce) return <div className={className}>{children}</div>;
+  const Tag = motion[as];
+
+  if (reduce) {
+    const Plain = as;
+    return <Plain className={className}>{children}</Plain>;
+  }
 
   const hidden = p.y !== undefined ? { opacity: 0, y: p.y } : { opacity: 0 };
   const show = p.y !== undefined ? { opacity: 1, y: 0, transition: p.transition } : { opacity: 1, transition: p.transition };
 
   return (
-    <motion.div className={className} variants={{ hidden, show }}>
+    <Tag className={className} variants={{ hidden, show }}>
       {children}
-    </motion.div>
+    </Tag>
+  );
+}
+
+/**
+ * Crossfades route content on client-side navigation instead of an instant
+ * pop. Opacity-only by construction (no `y`/transform ever) so it carries
+ * zero risk of the transform/overflow-ancestor interaction that caused the
+ * Architect scrollbar flicker — safe to use on every page, including that
+ * one. Waits for the outgoing page to finish fading before the incoming one
+ * starts (mode="wait"): sibling pages here differ a lot in height, so
+ * overlapping them mid-crossfade would look broken, not smooth.
+ * `initial={false}` skips animating the very first paint of the app.
+ */
+export function PageTransition({ children, preset = 'smooth' }: { children: ReactNode; preset?: 'hud' | 'smooth' }) {
+  const pathname = usePathname();
+  const reduce = useReducedMotion();
+  const duration = preset === 'hud' ? 0.16 : 0.22;
+
+  if (reduce) return <>{children}</>;
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   );
 }

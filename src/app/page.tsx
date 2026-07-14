@@ -110,34 +110,35 @@ export default async function Home() {
           {/* RPG Stat Block (About) */}
           <Reveal as="section" preset="hud" className="lg:col-span-5 flex flex-col gap-4">
             <h2 className="text-headline-md font-headline-md text-primary uppercase border-b border-outline-variant pb-2">CHARACTER_SHEET</h2>
-            <div className="ruled-border bg-[#111111] p-0 flex flex-col">
-              <div className="flex justify-between items-center border-b border-outline-variant p-4">
+            <RevealGroup preset="hud" className="ruled-border bg-[#111111] p-0 flex flex-col">
+              <RevealItem preset="hud" className="flex justify-between items-center border-b border-outline-variant p-4">
                 <span className="text-secondary font-code-sm">CLASS</span>
                 <span className="text-primary font-code-sm font-bold">{profile.class}</span>
-              </div>
-              <div className="flex justify-between items-center border-b border-outline-variant p-4">
+              </RevealItem>
+              <RevealItem preset="hud" className="flex justify-between items-center border-b border-outline-variant p-4">
                 <span className="text-secondary font-code-sm">BASE</span>
                 <span className="text-primary font-code-sm">{profile.base}</span>
-              </div>
-              <div className="flex justify-between items-center border-b border-outline-variant p-4">
+              </RevealItem>
+              <RevealItem preset="hud" className="flex justify-between items-center border-b border-outline-variant p-4">
                 <span className="text-secondary font-code-sm">GUILD</span>
                 <span className="text-primary font-code-sm">{profile.guild}</span>
-              </div>
-              <div className="flex justify-between items-center p-4">
+              </RevealItem>
+              <RevealItem preset="hud" className="flex justify-between items-center p-4">
                 <span className="text-secondary font-code-sm">STATUS</span>
                 <span className="text-brand-amber font-code-sm blinking-cursor">{profile.status}</span>
-              </div>
-            </div>
+              </RevealItem>
+            </RevealGroup>
           </Reveal>
 
           {/* Skills Inventory */}
           <Reveal as="section" preset="hud" delay={0.1} className="lg:col-span-7 flex flex-col gap-4">
             <h2 className="text-headline-md font-headline-md text-primary uppercase border-b border-outline-variant pb-2">INVENTORY (SKILLS)</h2>
-            <div className="grid grid-cols-4 md:grid-cols-6 gap-px bg-[#333333] border border-[#333333]">
+            <RevealGroup preset="hud" className="grid grid-cols-4 md:grid-cols-6 gap-px bg-[#333333] border border-[#333333]">
               {/* Skill Slots */}
               {filledSlots.map((skill: Skill, idx: number) => (
-                <div 
-                  key={idx} 
+                <RevealItem
+                  key={idx}
+                  preset="hud"
                   className="aspect-square bg-background flex flex-col items-center justify-center p-2 hover:bg-[#111111] border-2 border-transparent hover:border-brand-amber transition-none cursor-pointer group"
                 >
                   <span className={`font-code-sm text-xs font-bold ${
@@ -145,12 +146,12 @@ export default async function Home() {
                   }`}>
                     {skill.name}
                   </span>
-                </div>
+                </RevealItem>
               ))}
               {emptySlots.map((_, idx) => (
                 <div key={`empty-${idx}`} className="aspect-square bg-[#111111] flex flex-col items-center justify-center p-2"></div>
               ))}
-            </div>
+            </RevealGroup>
           </Reveal>
         </div>
 
