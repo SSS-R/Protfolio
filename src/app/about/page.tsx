@@ -1,5 +1,6 @@
 import React from 'react';
 import { readData } from '@/lib/store';
+import { Reveal } from '@/components/motion';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getPortfolioData(): Promise<any> {
@@ -29,8 +30,8 @@ export default async function AboutPage() {
       {/* Background conf watermark */}
       <div className="watermark">SYS_ABOUT</div>
 
-      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 relative z-10">
-        
+      <Reveal as="div" preset="hud" className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 relative z-10">
+
         {/* Header Block */}
         <div className="md:col-span-12 border border-brand-ruled p-6 bg-brand-dark/85 backdrop-blur-sm">
           <h1 className="text-headline-xl-mobile md:text-headline-xl font-headline-xl text-primary uppercase tracking-widest blinking-cursor">
@@ -81,7 +82,7 @@ export default async function AboutPage() {
           </div>
         </section>
 
-      </div>
+      </Reveal>
 
       {/* Floating Status Bar */}
       <div className="bg-surface-container-lowest border-t border-outline-variant w-full px-4 md:px-12 py-2 flex justify-between items-center z-40 fixed bottom-0 left-0 lg:left-64 lg:w-[calc(100%-16rem)]">

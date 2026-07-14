@@ -1,5 +1,6 @@
 import React from 'react';
 import ContactForm from '@/components/ContactForm';
+import { Reveal } from '@/components/motion';
 
 export const metadata = {
   title: 'CONTACT | SULTAN SAJED SHAHRIAR',
@@ -12,9 +13,9 @@ export default function ContactPage() {
       {/* Background watermark */}
       <div className="watermark">SYS_CONTACT</div>
 
-      <div className="max-w-xl mx-auto relative z-10">
+      <Reveal as="div" preset="hud" className="max-w-xl mx-auto relative z-10">
         <ContactForm />
-      </div>
+      </Reveal>
     </div>
   );
 }

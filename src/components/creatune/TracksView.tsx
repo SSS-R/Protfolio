@@ -3,6 +3,7 @@
 import React from 'react';
 import { usePlayer, PlayIcon } from '../CreaTunePlayer';
 import TrackList from './TrackList';
+import { Reveal } from '../motion';
 
 export default function TracksView() {
   const { tracks, playFrom } = usePlayer();
@@ -10,7 +11,7 @@ export default function TracksView() {
 
   return (
     <div className="max-w-6xl mx-auto px-5 md:px-8 pt-10">
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-5">
+      <Reveal preset="smooth" className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-5">
         <div>
           <h1 className="font-[family-name:var(--font-display)] font-semibold uppercase text-3xl md:text-5xl tracking-tight">All songs</h1>
           <p className="mt-2 text-[11px] uppercase tracking-[0.25em] text-[#9BA0B4]">
@@ -27,10 +28,10 @@ export default function TracksView() {
             Play all
           </button>
         )}
-      </div>
-      <div className="mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden">
+      </Reveal>
+      <Reveal preset="smooth" delay={0.08} className="mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden">
         <TrackList list={tracks} />
-      </div>
+      </Reveal>
     </div>
   );
 }

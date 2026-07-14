@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePlayer, PlayIcon, PauseIcon, SoundCloudIcon, YouTubeIcon, LOGO_FALLBACK } from '../CreaTunePlayer';
 import TrackList from './TrackList';
+import { Reveal, RevealGroup, RevealItem } from '../motion';
 import type { CreaTuneTrack } from '../creatune-types';
 
 // Deterministic waveform silhouette (hydration-safe)
@@ -53,15 +54,19 @@ export default function LandingView() {
         </div>
         <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none" aria-hidden="true" />
 
-        <div className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-36 md:pb-44 relative flex flex-col items-center">
-          <div className="rounded-full p-[3px] bg-gradient-to-b from-[#A9A3CE66] to-transparent">
+        <RevealGroup preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-36 md:pb-44 relative flex flex-col items-center">
+          <RevealItem preset="smooth" className="rounded-full p-[3px] bg-gradient-to-b from-[#A9A3CE66] to-transparent">
             <Image src={LOGO_FALLBACK} alt={`${studio} logo`} width={140} height={140} priority className="rounded-full border border-[#EDEBF4]/15" style={{ boxShadow: '0 0 60px rgba(169,163,206,0.4), 0 0 140px rgba(201,169,192,0.2)' }} />
-          </div>
-          <h1 className="mt-10 text-center font-[family-name:var(--font-display)] font-semibold uppercase text-[9vw] md:text-6xl lg:text-7xl tracking-[0.4em] md:tracking-[0.5em] -mr-[0.4em] leading-none" style={{ textShadow: '0 0 36px rgba(169,163,206,0.4), 0 0 90px rgba(201,169,192,0.2)' }}>
-            {studio}
-          </h1>
-          <p className="mt-6 text-center text-[11px] uppercase tracking-[0.35em] text-[#9BA0B4] font-[family-name:var(--font-display)] max-w-xl">{tagline}</p>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          </RevealItem>
+          <RevealItem preset="smooth">
+            <h1 className="mt-10 text-center font-[family-name:var(--font-display)] font-semibold uppercase text-[9vw] md:text-6xl lg:text-7xl tracking-[0.4em] md:tracking-[0.5em] -mr-[0.4em] leading-none" style={{ textShadow: '0 0 36px rgba(169,163,206,0.4), 0 0 90px rgba(201,169,192,0.2)' }}>
+              {studio}
+            </h1>
+          </RevealItem>
+          <RevealItem preset="smooth">
+            <p className="mt-6 text-center text-[11px] uppercase tracking-[0.35em] text-[#9BA0B4] font-[family-name:var(--font-display)] max-w-xl">{tagline}</p>
+          </RevealItem>
+          <RevealItem preset="smooth" className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <button onClick={toggleMain} className="rounded-full bg-[#A9A3CE] text-black pl-5 pr-6 py-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-display)] hover:bg-[#EDEBF4] transition-colors duration-200 cursor-pointer" style={{ boxShadow: '0 0 32px rgba(169,163,206,0.35)' }}>
               {isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
               {isPlaying ? 'Pause' : 'Listen now'}
@@ -72,13 +77,13 @@ export default function LandingView() {
                 {label}
               </a>
             ))}
-          </div>
-        </div>
+          </RevealItem>
+        </RevealGroup>
       </section>
 
       {/* CATALOGUE + LATEST RELEASE */}
       {tracks.length > 0 && (
-        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Reveal as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex items-center gap-4 md:gap-5">
             <Image src={coverFor(latest)} alt="" width={72} height={72} className="rounded-[14px] border border-white/10 shrink-0 w-14 h-14 md:w-[72px] md:h-[72px] object-cover" />
             <div className="min-w-0 flex-1">
@@ -113,12 +118,12 @@ export default function LandingView() {
               </div>
             </div>
           </div>
-        </section>
+        </Reveal>
       )}
 
       {/* NEWS + NEXT RELEASE */}
       {(news?.title || news?.body || hasNextRelease) && (
-        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Reveal as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
           {(news?.title || news?.body) && (
             <div className={`rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 ${hasNextRelease ? 'md:col-span-2' : 'md:col-span-3'}`}>
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0] font-[family-name:var(--font-display)]">News</p>
@@ -139,12 +144,12 @@ export default function LandingView() {
               {nextRelease?.note && <p className="mt-3 text-sm leading-6 text-[#CFCDDE] whitespace-pre-wrap">{nextRelease.note}</p>}
             </div>
           )}
-        </section>
+        </Reveal>
       )}
 
       {/* FEATURED / TOP SONGS */}
       {featured.length > 0 && (
-        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-10">
+        <Reveal as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-10">
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden">
             <div className="flex items-baseline justify-between px-5 md:px-6 pt-5 pb-3 border-b border-white/[0.06]">
               <h2 className="text-xs font-bold uppercase tracking-[0.3em] font-[family-name:var(--font-display)]">
@@ -156,12 +161,12 @@ export default function LandingView() {
             </div>
             <TrackList list={featured} />
           </div>
-        </section>
+        </Reveal>
       )}
 
       {/* ALBUMS PREVIEW */}
       {albums.length > 0 && (
-        <section className="max-w-6xl mx-auto px-5 md:px-8 mt-10">
+        <Reveal as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-10">
           <div className="flex items-baseline justify-between border-b border-white/10 pb-3">
             <h2 className="text-xs font-bold uppercase tracking-[0.3em] font-[family-name:var(--font-display)]">Albums</h2>
             <Link href="/music/albums" className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9BA0B4] hover:text-[#A9A3CE] transition-colors">
@@ -179,7 +184,7 @@ export default function LandingView() {
               </Link>
             ))}
           </div>
-        </section>
+        </Reveal>
       )}
 
       {/* Footer */}

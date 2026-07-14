@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { readData } from '@/lib/store';
+import { Reveal, RevealGroup, RevealItem } from '@/components/motion';
 import type { Project, Skill } from '@/types/portfolio';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,28 +57,34 @@ export default async function Home() {
         {/* Hero Section */}
         <section className="ruled-border p-6 md:p-12 bg-surface-container-lowest relative overflow-hidden">
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-            <div className="md:col-span-8 flex flex-col gap-6">
-              <h1 className="text-headline-xl-mobile md:text-headline-xl font-headline-xl text-primary uppercase tracking-wider leading-none">
-                SULTAN SAJED<br/>SHAHRIAR
-              </h1>
-              <p className="text-body-lg font-code-sm text-on-surface-variant blinking-cursor">
-                CS Student · Freelance Web Dev · AI Systems Builder
-              </p>
-              {profile.intro && (
-                <p className="text-body-md text-secondary max-w-2xl leading-relaxed mt-2">
-                  {profile.intro}
+            <RevealGroup preset="hud" className="md:col-span-8 flex flex-col gap-6">
+              <RevealItem preset="hud">
+                <h1 className="text-headline-xl-mobile md:text-headline-xl font-headline-xl text-primary uppercase tracking-wider leading-none">
+                  SULTAN SAJED<br/>SHAHRIAR
+                </h1>
+              </RevealItem>
+              <RevealItem preset="hud">
+                <p className="text-body-lg font-code-sm text-on-surface-variant blinking-cursor">
+                  CS Student · Freelance Web Dev · AI Systems Builder
                 </p>
+              </RevealItem>
+              {profile.intro && (
+                <RevealItem preset="hud">
+                  <p className="text-body-md text-secondary max-w-2xl leading-relaxed">
+                    {profile.intro}
+                  </p>
+                </RevealItem>
               )}
-              <div className="flex flex-wrap gap-4 mt-4">
+              <RevealItem preset="hud" className="flex flex-wrap gap-4 mt-4">
                 <Link href="/inventory" className="btn-brutalist px-6 py-3 font-code-sm text-code-sm font-bold tracking-widest text-center">
                   VIEW WORK
                 </Link>
                 <Link href="/architect" className="btn-brutalist px-6 py-3 font-code-sm text-code-sm font-bold tracking-widest text-center">
                   DOWNLOAD CV
                 </Link>
-              </div>
-            </div>
-            <div className="md:col-span-4 flex justify-center md:justify-end">
+              </RevealItem>
+            </RevealGroup>
+            <Reveal preset="hud" delay={0.15} className="md:col-span-4 flex justify-center md:justify-end">
               <div className="w-48 h-48 ruled-border bg-[#111111] relative overflow-hidden flex items-center justify-center">
                 <video
                   autoPlay
@@ -92,7 +99,7 @@ export default async function Home() {
                   <source src="/videos/hero-loop.mp4" type="video/mp4" />
                 </video>
               </div>
-            </div>
+            </Reveal>
           </div>
           {/* Grid background pattern */}
           <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '48px 48px' }}></div>
@@ -101,7 +108,7 @@ export default async function Home() {
         {/* Grid Layout for About & Skills */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* RPG Stat Block (About) */}
-          <section className="lg:col-span-5 flex flex-col gap-4">
+          <Reveal as="section" preset="hud" className="lg:col-span-5 flex flex-col gap-4">
             <h2 className="text-headline-md font-headline-md text-primary uppercase border-b border-outline-variant pb-2">CHARACTER_SHEET</h2>
             <div className="ruled-border bg-[#111111] p-0 flex flex-col">
               <div className="flex justify-between items-center border-b border-outline-variant p-4">
@@ -121,10 +128,10 @@ export default async function Home() {
                 <span className="text-brand-amber font-code-sm blinking-cursor">{profile.status}</span>
               </div>
             </div>
-          </section>
+          </Reveal>
 
           {/* Skills Inventory */}
-          <section className="lg:col-span-7 flex flex-col gap-4">
+          <Reveal as="section" preset="hud" delay={0.1} className="lg:col-span-7 flex flex-col gap-4">
             <h2 className="text-headline-md font-headline-md text-primary uppercase border-b border-outline-variant pb-2">INVENTORY (SKILLS)</h2>
             <div className="grid grid-cols-4 md:grid-cols-6 gap-px bg-[#333333] border border-[#333333]">
               {/* Skill Slots */}
@@ -144,7 +151,7 @@ export default async function Home() {
                 <div key={`empty-${idx}`} className="aspect-square bg-[#111111] flex flex-col items-center justify-center p-2"></div>
               ))}
             </div>
-          </section>
+          </Reveal>
         </div>
 
         {/* Projects Grid */}
@@ -153,11 +160,11 @@ export default async function Home() {
             <h2 className="text-headline-md font-headline-md text-primary uppercase">ACTIVE_PROJECTS</h2>
             <span className="text-secondary font-code-sm text-xs">PAGE 01 / 01</span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <RevealGroup preset="hud" className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {activeProjects.map((project: Project) => (
-              <article 
-                key={project.id} 
-                className="ruled-border bg-surface-container-lowest flex flex-col group hover:border-brand-amber transition-none"
+              <RevealItem key={project.id} preset="hud" className="h-full">
+              <article
+                className="ruled-border bg-surface-container-lowest flex flex-col group hover:border-brand-amber transition-none h-full"
               >
                 <div className="h-48 border-b border-outline-variant bg-[#111111] relative overflow-hidden flex items-center justify-center">
                   <Image
@@ -190,8 +197,9 @@ export default async function Home() {
                   </div>
                 </div>
               </article>
+              </RevealItem>
             ))}
-          </div>
+          </RevealGroup>
         </section>
 
       </div>

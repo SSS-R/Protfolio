@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePlayer, PlayIcon, LOGO_FALLBACK } from '../CreaTunePlayer';
 import TrackList from './TrackList';
+import { Reveal } from '../motion';
 
 export default function AlbumDetailView({ albumId }: { albumId: string }) {
   const { albums, tracks, playFrom } = usePlayer();
@@ -31,7 +32,7 @@ export default function AlbumDetailView({ albumId }: { albumId: string }) {
       </Link>
 
       {/* Album header */}
-      <div className="mt-5 flex flex-col sm:flex-row items-start sm:items-end gap-6 border-b border-white/10 pb-8">
+      <Reveal as="div" preset="smooth" className="mt-5 flex flex-col sm:flex-row items-start sm:items-end gap-6 border-b border-white/10 pb-8">
         <Image src={album.cover || LOGO_FALLBACK} alt="" width={200} height={200} className="rounded-2xl border border-white/10 object-cover w-40 h-40 md:w-52 md:h-52 shrink-0" style={{ boxShadow: '0 0 60px rgba(169,163,206,0.25)' }} />
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0] font-[family-name:var(--font-display)]">Album</p>
@@ -50,16 +51,16 @@ export default function AlbumDetailView({ albumId }: { albumId: string }) {
             </button>
           )}
         </div>
-      </div>
+      </Reveal>
 
       {/* Album tracks */}
-      <div className="mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden">
+      <Reveal as="div" preset="smooth" delay={0.08} className="mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden">
         {albumTracks.length === 0 ? (
           <p className="px-6 py-12 text-sm text-[#9BA0B4]">No tracks assigned to this album yet.</p>
         ) : (
           <TrackList list={albumTracks} />
         )}
-      </div>
+      </Reveal>
     </div>
   );
 }
