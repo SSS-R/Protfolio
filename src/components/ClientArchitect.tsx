@@ -77,7 +77,7 @@ export default function ClientArchitect({
       `}</style>
 
       {/* Main Content Layout */}
-      <Reveal as="div" preset="hud" className="flex-1 p-4 md:p-12 grid grid-cols-1 md:grid-cols-12 gap-8 relative pb-32 print:p-0 print:gap-4 print:pb-0">
+      <Reveal as="div" preset="fade" className="flex-1 p-4 md:p-12 grid grid-cols-1 md:grid-cols-12 gap-8 relative pb-32 print:p-0 print:gap-4 print:pb-0">
 
         {/* Page Header */}
         <div className="col-span-1 md:col-span-12 border border-brand-ruled p-6 relative bg-brand-dark/80 backdrop-blur-sm print:bg-white print:border-black">

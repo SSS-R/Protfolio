@@ -4,19 +4,25 @@ import { motion, useReducedMotion, type Transition } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 /**
- * Two motion personalities:
+ * Three motion personalities:
  *  - 'hud'    → portfolio (retro terminal): snappy, small offset, sharp ease.
  *               Reads like HUD panels booting online.
  *  - 'smooth' → CreaTune (Swiss/glass): slower, larger offset, soft ease-out.
  *               Reads as calm and premium.
- * Both fade + rise, transform/opacity only, and collapse to no motion when the
- * viewer prefers reduced motion.
+ *  - 'fade'   → opacity only, no transform at all. Use this when the reveal
+ *               wraps a large subtree sitting directly inside an ancestor with
+ *               overflow-x-hidden (a `transform` on the child makes it the
+ *               containing block for fixed descendants and forces a new
+ *               compositing layer, which can cause a transient scrollbar
+ *               flicker in that specific combination).
+ * All collapse to no motion when the viewer prefers reduced motion.
  */
-type Preset = 'hud' | 'smooth';
+type Preset = 'hud' | 'smooth' | 'fade';
 
-const PRESET: Record<Preset, { y: number; transition: Transition; stagger: number }> = {
+const PRESET: Record<Preset, { y?: number; transition: Transition; stagger: number }> = {
   hud: { y: 8, transition: { duration: 0.28, ease: [0.16, 1, 0.3, 1] }, stagger: 0.05 },
   smooth: { y: 16, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }, stagger: 0.08 },
+  fade: { transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] }, stagger: 0.05 },
 };
 
 interface RevealProps {
@@ -38,11 +44,16 @@ export function Reveal({ children, preset = 'smooth', delay = 0, className, as =
     return <Plain className={className}>{children}</Plain>;
   }
 
+  // Only include `y` in the animated keyframes when the preset defines one —
+  // if it's omitted, Framer Motion never touches `transform` at all.
+  const initial = p.y !== undefined ? { opacity: 0, y: p.y } : { opacity: 0 };
+  const animate = p.y !== undefined ? { opacity: 1, y: 0 } : { opacity: 1 };
+
   return (
     <Tag
       className={className}
-      initial={{ opacity: 0, y: p.y }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={initial}
+      whileInView={animate}
       viewport={{ once: true, margin: '-50px' }}
       transition={{ ...p.transition, delay }}
     >
@@ -75,11 +86,11 @@ export function RevealItem({ children, preset = 'smooth', className }: RevealPro
   const p = PRESET[preset];
   if (reduce) return <div className={className}>{children}</div>;
 
+  const hidden = p.y !== undefined ? { opacity: 0, y: p.y } : { opacity: 0 };
+  const show = p.y !== undefined ? { opacity: 1, y: 0, transition: p.transition } : { opacity: 1, transition: p.transition };
+
   return (
-    <motion.div
-      className={className}
-      variants={{ hidden: { opacity: 0, y: p.y }, show: { opacity: 1, y: 0, transition: p.transition } }}
-    >
+    <motion.div className={className} variants={{ hidden, show }}>
       {children}
     </motion.div>
   );
