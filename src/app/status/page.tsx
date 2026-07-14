@@ -33,7 +33,7 @@ export default async function StatusPage() {
   };
 
   return (
-    <div className="p-4 md:p-12 relative min-h-screen pb-32">
+    <div className="p-4 md:p-12 relative pb-32">
       {/* Background conf watermark */}
       <div className="watermark">SYS_STATUS</div>
 

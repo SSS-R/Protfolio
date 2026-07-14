@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="p-4 md:p-12 relative min-h-screen pb-32">
+    <div className="p-4 md:p-12 relative pb-32">
       {/* Background watermark */}
       <div className="watermark">SYS_CONTACT</div>
 

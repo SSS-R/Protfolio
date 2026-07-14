@@ -36,7 +36,7 @@ export default function ClientInventory({ projects }: ClientInventoryProps) {
   const tabs: ('ACTIVE' | 'SHIPPED' | 'TBD')[] = ['ACTIVE', 'SHIPPED', 'TBD'];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col">
       {/* Page Header / Top Bar */}
       <header className="border-b border-outline-variant px-4 md:px-12 py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#111111] z-10">
         <div>

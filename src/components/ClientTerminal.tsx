@@ -18,7 +18,7 @@ export default function ClientTerminal({ initialCommands }: ClientTerminalProps)
   const [history, setHistory] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [latency, setLatency] = useState(12);
-  const terminalEndRef = useRef<HTMLDivElement>(null);
+  const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Convert array of commands to a key-value map for quick lookup
@@ -57,8 +57,11 @@ export default function ClientTerminal({ initialCommands }: ClientTerminalProps)
   }, []);
 
   useEffect(() => {
-    // Scroll to bottom whenever history changes
-    terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll only the terminal's own output panel, never the page itself.
+    // (scrollIntoView bubbles to the outer viewport too, which was yanking
+    // the whole page down to the terminal on every boot line.)
+    const el = outputRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [history]);
 
   const handleTerminalClick = () => {
@@ -119,7 +122,7 @@ export default function ClientTerminal({ initialCommands }: ClientTerminalProps)
         className="flex-1 border border-outline-variant bg-[#111111] p-6 font-code-sm text-code-sm flex flex-col relative overflow-hidden cursor-text"
       >
         {/* Output lines */}
-        <div className="flex-1 overflow-y-auto flex flex-col gap-2 text-brand-amber pb-4">
+        <div ref={outputRef} className="flex-1 overflow-y-auto flex flex-col gap-2 text-brand-amber pb-4">
           {history.map((line, idx) => (
             <div
               key={idx}
@@ -129,7 +132,6 @@ export default function ClientTerminal({ initialCommands }: ClientTerminalProps)
               {line}
             </div>
           ))}
-          <div ref={terminalEndRef} />
         </div>
 
         {/* Input prompt line */}
