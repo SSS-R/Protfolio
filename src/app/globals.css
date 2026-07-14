@@ -60,6 +60,18 @@
   --radius-xl: 0px;
 }
 
+/* Reserve the vertical scrollbar's width on every page, whether or not that
+   page actually needs to scroll. Without this, navigating between a tall
+   page (scrollbar present) and a short one (no scrollbar) changes the
+   available content width by the scrollbar's width, visibly shifting
+   everything sideways — most noticeable on CreaTune, where the persistent
+   player/header stay mounted across route changes with very different
+   content heights (e.g. the long landing page vs. the exactly-one-viewport
+   Songs/Albums pages). */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Custom CSS global defaults */
 body {
   background-color: var(--color-background);
