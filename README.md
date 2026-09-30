@@ -1,6 +1,6 @@
 # Portfolio + CreaTune
 
-Personal portfolio (retro RPG/terminal theme) plus **CreaTune**, a Swiss-modern
+Personal portfolio ("Signal from noise" — GSAP, Lenis, Three.js; see [`DESIGN.md`](DESIGN.md)) plus **CreaTune**, a Swiss-modern
 music site with a persistent Spotify-style player and a studio admin panel.
 
 ## Local development

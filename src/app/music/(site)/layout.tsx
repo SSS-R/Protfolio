@@ -1,6 +1,12 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { readData } from '@/lib/store';
 import CreaTunePlayerProvider from '@/components/CreaTunePlayer';
+
+export const metadata: Metadata = {
+  title: { template: '%s — CreaTune', default: 'CreaTune — Independent sound studio' },
+  description: 'CreaTune — independent sound studio. Original tracks, engineered end to end.',
+};
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';

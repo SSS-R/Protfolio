@@ -1,121 +1,100 @@
 import type { Metadata } from 'next';
-import { Inter, IBM_Plex_Mono, JetBrains_Mono, Press_Start_2P, Yellowtail, Montserrat } from 'next/font/google';
+import {
+  Archivo,
+  Instrument_Serif,
+  JetBrains_Mono,
+  Inter,
+  IBM_Plex_Mono,
+  Press_Start_2P,
+  Yellowtail,
+  Montserrat,
+} from 'next/font/google';
 import './globals.css';
-import { readData } from '@/lib/store';
-import ClientLayout from '@/components/ClientLayout';
+import Transitions from '@/components/site/Transitions';
 
-// Font configuration using next/font/google
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-});
+// ── Portfolio (v3) ──
+// Archivo's width axis gives the condensed caps of the name from the same family as the body.
+const archivo = Archivo({ subsets: ['latin'], axes: ['wdth'], variable: '--font-archivo', display: 'swap' });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  weight: ['400', '600', '700'],
+const instrument = Instrument_Serif({
+  weight: '400',
+  style: ['normal', 'italic'],
   subsets: ['latin'],
-  variable: '--font-ibm-plex-mono',
+  variable: '--font-instrument',
   display: 'swap',
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  weight: ['400', '700'],
+  weight: ['400', '500'],
   subsets: ['latin'],
   variable: '--font-jetbrains-mono',
   display: 'swap',
 });
 
+// ── Admin panel (v2 theme tokens) and CreaTune: loaded on use, never preloaded ──
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap', preload: false });
+const ibmPlexMono = IBM_Plex_Mono({
+  weight: ['400', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-ibm-plex-mono',
+  display: 'swap',
+  preload: false,
+});
 const pressStart2P = Press_Start_2P({
   weight: '400',
   subsets: ['latin'],
   variable: '--font-press-start-2p',
   display: 'swap',
+  preload: false,
 });
-
-// Script face for the CreaTune wordmark (matches the studio's signature logo)
-const yellowtail = Yellowtail({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-script',
-  display: 'swap',
-});
-
-// Geometric sans for CreaTune display lettering (matches the banner's spaced caps)
+const yellowtail = Yellowtail({ weight: '400', subsets: ['latin'], variable: '--font-script', display: 'swap', preload: false });
 const montserrat = Montserrat({
   weight: ['500', '600', '700'],
   subsets: ['latin'],
   variable: '--font-display',
   display: 'swap',
+  preload: false,
 });
+
+const description =
+  'Computer Engineering student at BRAC University building full-stack systems and AI agent tooling, and researching quantum cryptography. Based in Dhaka.';
 
 export const metadata: Metadata = {
   // Uses the deployment URL Vercel injects; falls back to localhost in dev.
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
   ),
-  title: 'SULTAN SAJED SHAHRIAR | PORTFOLIO',
-  description: 'CS Student · Freelance Web Dev · AI Systems Builder. Swiss Modernism meets Cyberpunk Terminal interface.',
-  icons: {
-    icon: '/favicon.ico',
-  },
-  openGraph: {
-    title: 'SULTAN SAJED SHAHRIAR | PORTFOLIO',
-    description: 'CS Student · Freelance Web Dev · AI Systems Builder. Swiss Modernism meets Cyberpunk Terminal interface.',
-    type: 'website',
-    images: [
-      {
-        url: '/images/developer_avatar.png',
-        width: 512,
-        height: 512,
-        alt: 'Pixel art avatar of Sultan Sajed Shahriar at a retro computer',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary',
-    title: 'SULTAN SAJED SHAHRIAR | PORTFOLIO',
-    description: 'CS Student · Freelance Web Dev · AI Systems Builder.',
-    images: ['/images/developer_avatar.png'],
-  },
+  title: { default: 'Sultan Sajed Shahriar — Engineer', template: '%s — Sultan Sajed Shahriar' },
+  description,
+  icons: { icon: '/favicon.ico' },
+  openGraph: { title: 'Sultan Sajed Shahriar', description, type: 'website' },
+  twitter: { card: 'summary_large_image', title: 'Sultan Sajed Shahriar', description },
 };
 
-// Force dynamic rendering to load fresh portfolio data updates
-export const revalidate = 0;
-export const dynamic = 'force-dynamic';
+// Runs before paint: marks JS as available (so motion can pre-hide what it will
+// reveal), skips the preloader after the first page of a session, and never
+// leaves content hidden for more than 4s if the motion bundle fails.
+const bootScript = `(function(){var d=document.documentElement;d.classList.add('js');try{if(sessionStorage.getItem('sss-intro'))d.dataset.intro='seen'}catch(e){}setTimeout(function(){d.classList.add('motion-ready')},4000)})();`;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getPortfolioData(): Promise<any> {
-  return readData('portfolio', null);
-}
+// Dev only: Bitdefender's browser extension stamps bis_skin_checked / bis_register
+// onto every <div> before React hydrates, which trips the dev hydration overlay.
+// Production React doesn't diff attributes on hydration, so visitors never see it.
+const extensionGuard = `new MutationObserver(function(m){m.forEach(function(r){r.target.removeAttribute(r.attributeName)})}).observe(document.documentElement,{attributes:true,subtree:true,attributeFilter:['bis_skin_checked','bis_register']});`;
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const data = await getPortfolioData();
-
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${ibmPlexMono.variable} ${jetbrainsMono.variable} ${pressStart2P.variable} ${yellowtail.variable} ${montserrat.variable} dark`}
+      suppressHydrationWarning
+      className={`${archivo.variable} ${instrument.variable} ${jetbrainsMono.variable} ${inter.variable} ${ibmPlexMono.variable} ${pressStart2P.variable} ${yellowtail.variable} ${montserrat.variable} dark`}
     >
       <head>
-        {/*
-          Material Symbols is an icon font, not a text typeface — next/font/google
-          doesn't provide it, so it loads via <link>. Suppressing the text-font rule.
-        */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
-        />
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+        {process.env.NODE_ENV === 'development' ? <script dangerouslySetInnerHTML={{ __html: extensionGuard }} /> : null}
       </head>
-      <body className="bg-background text-on-background selection:bg-brand-amber selection:text-background min-h-screen antialiased">
-        <ClientLayout portfolioData={data}>
-          {children}
-        </ClientLayout>
+      <body className="bg-background text-on-background min-h-screen antialiased">
+        <Transitions>{children}</Transitions>
       </body>
     </html>
   );

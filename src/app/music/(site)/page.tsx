@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import LandingView from '@/components/creatune/LandingView';
 
 export const metadata: Metadata = {
-  title: 'CreaTune — Sound Studio',
+  title: { absolute: 'CreaTune — Independent sound studio' },
   description: 'CreaTune — independent sound studio. Listen to original tracks.',
 };
 

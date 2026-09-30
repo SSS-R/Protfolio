@@ -7,6 +7,15 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/**": ["./src/data/**"],
   },
+  // v2 route names → v3 pages, so old links and bookmarks keep working.
+  async redirects() {
+    return [
+      { source: '/architect', destination: '/about', permanent: true },
+      { source: '/status', destination: '/about', permanent: true },
+      { source: '/inventory', destination: '/work', permanent: true },
+      { source: '/terminal', destination: '/contact', permanent: true },
+    ];
+  },
   // Cover art uploaded in production is served from Vercel Blob.
   images: {
     remotePatterns: [

@@ -1,40 +1,47 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { usePlayer, LOGO_FALLBACK } from '../CreaTunePlayer';
-import { Reveal, RevealGroup, RevealItem } from '../motion';
+import { usePlayer, Cover } from '../CreaTunePlayer';
 
 export default function AlbumsView() {
   const { albums, tracks } = usePlayer();
   const countFor = (albumId: string) => tracks.filter((t) => t.albumId === albumId).length;
 
   return (
-    <div className="max-w-6xl mx-auto px-5 md:px-8 pt-10">
-      <Reveal preset="smooth" className="border-b border-white/10 pb-5">
-        <h1 className="font-[family-name:var(--font-display)] font-semibold uppercase text-3xl md:text-5xl tracking-tight">Albums</h1>
-        <p className="mt-2 text-[11px] uppercase tracking-[0.25em] text-[#9BA0B4]">{albums.length} releases</p>
-      </Reveal>
+    <div className="px-5 pt-36 md:px-10 md:pt-44">
+      <p className="label text-mauve" data-scramble>
+        (Releases)
+      </p>
+      <div className="mt-6 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <h1 data-split className="display-wide text-[19vw] md:text-[12vw]">
+          Albums
+        </h1>
+        <p className="label text-dim md:mb-4" data-fade>
+          {String(albums.length).padStart(2, '0')} releases
+        </p>
+      </div>
 
       {albums.length === 0 ? (
-        <p className="py-16 text-sm text-[#9BA0B4]">No albums yet. Singles live under Songs.</p>
+        <div className="mt-14 border-t border-line pt-10 md:mt-20" data-fade>
+          <p className="max-w-[24ch] text-[8vw] font-medium leading-[1] tracking-[-0.04em] text-dim md:text-[3.2vw]">
+            No albums yet. Every release so far is a single.
+          </p>
+          <Link href="/music/tracks" className="label u-link mt-8 inline-block">
+            Browse the songs ↗
+          </Link>
+        </div>
       ) : (
-        <RevealGroup preset="smooth" className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="mt-14 grid grid-cols-2 gap-x-5 gap-y-12 md:mt-20 lg:grid-cols-4">
           {albums.map((a) => (
-            <RevealItem key={a.id} preset="smooth">
-            <Link href={`/music/albums/${a.id}`} className="group">
-              <div className="aspect-square rounded-xl overflow-hidden border border-white/10">
-                <Image src={a.cover || LOGO_FALLBACK} alt="" width={400} height={400} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              </div>
-              <p className="mt-3 font-bold truncate">{a.title}</p>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4]">
-                {a.year || 'Album'} · {countFor(a.id)} track{countFor(a.id) === 1 ? '' : 's'}
+            <Link key={a.id} href={`/music/albums/${a.id}`} className="group" data-fade>
+              <Cover src={a.cover || ''} title={a.title} className="aspect-square w-full transition-transform duration-700 group-hover:scale-[0.98]" sizes="(min-width: 1024px) 25vw, 50vw" />
+              <p className="mt-4 truncate text-[20px] font-medium tracking-[-0.02em]">{a.title}</p>
+              <p className="label mt-1 text-dim">
+                {a.year || 'Album'} — {countFor(a.id)} track{countFor(a.id) === 1 ? '' : 's'}
               </p>
             </Link>
-            </RevealItem>
           ))}
-        </RevealGroup>
+        </div>
       )}
     </div>
   );

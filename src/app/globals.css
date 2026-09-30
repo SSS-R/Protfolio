@@ -58,6 +58,29 @@
   --radius-default: 0px;
   --radius-lg: 0px;
   --radius-xl: 0px;
+
+  /* ── v3 portfolio system ("Signal from noise", see DESIGN.md) ── */
+  --color-ink: #0b0b0c;
+  --color-ink-2: #141416;
+  --color-bone: #ece7df;
+  --color-bone-2: #ddd7cc;
+  --color-dim: #8c877f;
+  --color-dim-ink: #5c5750;
+  --color-signal: #ff5a1f;
+  --color-signal-deep: #c2410c;
+  --color-line: rgb(236 231 223 / 0.14);
+  --color-line-ink: rgb(11 11 12 / 0.14);
+
+  /* CreaTune: same system, the logo's palette in place of signal orange */
+  --color-mauve: #c9a9c0;
+  --color-lavender: #a9a3ce;
+  --color-dusk: #565c7e;
+
+  --font-grotesk: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 /* Reserve the vertical scrollbar's width on every page, whether or not that
@@ -70,6 +93,11 @@
    Songs/Albums pages). */
 html {
   scrollbar-gutter: stable;
+}
+
+/* Native smooth anchor scrolling everywhere Lenis is not running (CreaTune,
+   admin). Lenis adds .lenis to <html> and owns scrolling on portfolio pages. */
+html:not(.lenis) {
   scroll-behavior: smooth;
 }
 
@@ -114,275 +142,72 @@ body {
   border-color: var(--color-brand-amber);
 }
 
-/* Marquee for arcade footer */
-.marquee-container {
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.marquee-content {
-  display: inline-block;
-  animation: marquee 20s linear infinite;
-}
-
-@keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-
-/* CRT overlay and scanline animations */
-.scanline {
-  width: 100%;
-  height: 100px;
-  z-index: 50;
+/* Route transition: a glyph-edged ink sweep drawn on a canvas, plus the
+   destination label (src/components/site/Transitions.tsx). */
+.wipe {
   position: fixed;
-  pointer-events: none;
-  background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0) 100%);
-  opacity: 0.1;
-  animation: scanlineAnimation 8s linear infinite;
-}
-
-@keyframes scanlineAnimation {
-  0% { transform: translateY(-100vh); }
-  100% { transform: translateY(100vh); }
-}
-
-.scanline-wipe {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 10px;
-  background: rgba(245, 166, 35, 0.5);
-  box-shadow: 0 0 20px rgba(245, 166, 35, 0.8);
-  z-index: 9999;
-  animation: scanwipe 3s linear forwards;
-  pointer-events: none;
-  opacity: 0;
-}
-
-@keyframes scanwipe {
-  0% { top: 0; opacity: 1; }
-  90% { top: 100%; opacity: 1; }
-  100% { top: 100%; opacity: 0; }
-}
-
-/* Equalizer-bar page wipe (portfolio <-> CreaTune).
-   Vertical bars rise bottom-up in a stagger to cover the screen,
-   then lift away top-down to reveal the destination. */
-.wipe-bar {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: 12.6vw;
+  inset: 0;
   z-index: 300;
   pointer-events: none;
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform 0.45s cubic-bezier(0.77, 0, 0.18, 1);
 }
 
-.wipe-shut .wipe-bar {
-  transform: scaleY(1);
-  transform-origin: bottom;
-  pointer-events: auto;
-}
+.wipe.wipe-shut { pointer-events: auto; }
 
-.wipe-bar:nth-child(1) { left: 0;       transition-delay: 0ms; }
-.wipe-bar:nth-child(2) { left: 12.5vw;  transition-delay: 45ms; }
-.wipe-bar:nth-child(3) { left: 25vw;    transition-delay: 90ms; }
-.wipe-bar:nth-child(4) { left: 37.5vw;  transition-delay: 135ms; }
-.wipe-bar:nth-child(5) { left: 50vw;    transition-delay: 180ms; }
-.wipe-bar:nth-child(6) { left: 62.5vw;  transition-delay: 225ms; }
-.wipe-bar:nth-child(7) { left: 75vw;    transition-delay: 270ms; }
-.wipe-bar:nth-child(8) { left: 87.5vw;  transition-delay: 315ms; }
-
-/* Going to CreaTune: matches the site's solid black + blue/purple glow */
-.wipe-tone-music .wipe-bar:nth-child(odd) {
-  background: linear-gradient(180deg, #7c5cff 0%, #17122b 40%, #000000 100%);
-}
-
-.wipe-tone-music .wipe-bar:nth-child(even) {
-  background: linear-gradient(180deg, #0b0a14 0%, #000000 55%, #1d1637 100%);
-}
-
-.wipe-tone-music .wipe-bar:nth-child(4n) {
-  background: linear-gradient(180deg, #a9a3ce 0%, #120f22 35%, #000000 100%);
-}
-
-/* Returning to the portfolio: amber-and-ink arcade bars */
-.wipe-tone-portfolio .wipe-bar:nth-child(odd) {
-  background: linear-gradient(180deg, #f5a623 0%, #171310 30%, #0a0a0a 100%);
-}
-
-.wipe-tone-portfolio .wipe-bar:nth-child(even) {
-  background: linear-gradient(180deg, #171310 0%, #0a0a0a 65%, #241c0e 100%);
+.wipe canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .wipe-label {
-  position: fixed;
-  z-index: 301;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1.1rem;
+  padding: 0 1.25rem;
   opacity: 0;
-  transition: opacity 0.25s ease 0.45s;
+  color: #ece7df;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.wipe-shut .wipe-label {
-  opacity: 1;
+.wipe-kicker { color: #8c877f; }
+.wipe-sub { color: #8c877f; }
+
+.wipe-word {
+  display: block;
+  min-height: 0.84em;
+  font-family: var(--font-archivo), sans-serif;
+  font-stretch: 62%;
+  font-weight: 800;
+  font-size: clamp(3.5rem, 15vw, 13rem);
+  line-height: 0.84;
+  text-transform: uppercase;
 }
 
-.wipe-tone-music .wipe-label {
-  font-family: var(--font-script), cursive;
-  font-size: clamp(3rem, 8vw, 6rem);
-  color: #edebf4;
-  text-shadow: 0 0 40px rgba(124, 92, 255, 0.65), 0 0 90px rgba(169, 163, 206, 0.35);
+.wipe[data-tone='music'] .wipe-word {
+  font-stretch: 125%;
+  font-size: clamp(2.2rem, 8.5vw, 8rem);
+  letter-spacing: 0.12em;
+  padding-left: 0.12em;
 }
+.wipe[data-tone='music'] .wipe-kicker,
+.wipe[data-tone='music'] .wipe-sub { color: #c9a9c0; }
 
-.wipe-tone-portfolio .wipe-label {
-  font-family: var(--font-press-start-2p), monospace;
-  font-size: clamp(0.8rem, 2vw, 1.4rem);
-  letter-spacing: 0.4em;
-  color: #f5a623;
-  text-shadow: 0 0 24px rgba(245, 166, 35, 0.5);
-}
-
-/* CreaTune scope: visible keyboard focus on the dark theme */
-.ct-scope :focus-visible {
-  outline: 2px solid #a9a3ce;
-  outline-offset: 2px;
-}
-
-/* CreaTune equalizer bars */
-.ct-eq {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 100%;
-}
-
-.ct-eq span {
-  flex: 1;
-  height: 100%;
-  background: currentColor;
-  border-radius: 9999px;
-  animation: ctEq 1.1s ease-in-out infinite alternate;
-  transform-origin: bottom;
-}
-
-.ct-eq span:nth-child(2n) { animation-duration: 0.9s; animation-delay: 0.15s; }
-.ct-eq span:nth-child(3n) { animation-duration: 1.3s; animation-delay: 0.3s; }
-.ct-eq span:nth-child(5n) { animation-duration: 0.7s; animation-delay: 0.05s; }
-.ct-eq span:nth-child(7n) { animation-duration: 1.5s; animation-delay: 0.45s; }
-
-.ct-eq.ct-eq-paused span {
-  animation-play-state: paused;
-  transform: scaleY(0.22);
-  opacity: 0.5;
-}
-
-/* CreaTune live visualizer (player bar) — bars are scaled from the
-   Web Audio analyser via inline transforms, no CSS animation */
-.ct-viz {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-}
-
-.ct-viz span {
-  flex: 1;
-  height: 100%;
-  transform: scaleY(0.08);
-  transform-origin: bottom;
-  border-radius: 9999px;
-  background: linear-gradient(180deg, #c9a9c0, #a9a3ce 45%, #565c7e);
-  opacity: 0.9;
-  will-change: transform;
-}
-
-/* Mini "now playing" glyph in the track list */
-.ct-mini-eq {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
-  width: 18px;
-  height: 16px;
-}
-
-.ct-mini-eq span {
-  flex: 1;
-  height: 100%;
-  background: currentColor;
-  border-radius: 2px;
-  animation: ctEq 0.9s ease-in-out infinite alternate;
-  transform-origin: bottom;
-}
-
-.ct-mini-eq span:nth-child(2) { animation-delay: 0.2s; }
-.ct-mini-eq span:nth-child(3) { animation-delay: 0.35s; }
-
-@keyframes ctEq {
-  0% { transform: scaleY(0.1); }
-  100% { transform: scaleY(1); }
-}
-
-/* Respect users who prefer less motion: stop decorative animations,
-   keep the marquee text readable in place */
+/* Respect users who prefer less motion: stop decorative animations */
 @media (prefers-reduced-motion: reduce) {
-  html {
+  html,
+  html:not(.lenis) {
     scroll-behavior: auto;
   }
 
   .blinking-cursor::after,
-  .marquee-content,
-  .scanline,
-  .scanline-wipe,
-  .ct-eq span,
-  .ct-mini-eq span {
+  .ct-eq span {
     animation: none;
   }
-
-  .wipe-bar,
-  .wipe-label {
-    transition: none;
-  }
-
-  .scanline,
-  .scanline-wipe {
-    display: none;
-  }
-
-  .marquee-content {
-    transform: none;
-  }
-}
-
-.crt-overlay {
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-              linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-  background-size: 100% 2px, 3px 100%;
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  opacity: 0.3;
-}
-
-.watermark {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-45deg);
-  font-size: 15vw;
-  color: rgba(255, 255, 255, 0.015);
-  font-family: var(--font-ibm-plex-mono), monospace;
-  font-weight: 700;
-  pointer-events: none;
-  white-space: nowrap;
-  z-index: 0;
-  user-select: none;
 }
 
 .grid-bg {
@@ -393,20 +218,234 @@ body {
   background-position: center top;
 }
 
-.card-inner {
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
+/* ───────────────────── v3 portfolio ("Signal from noise") ───────────────────── */
+
+.site {
+  background: var(--color-ink);
+  color: var(--color-bone);
+  font-family: var(--font-grotesk);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.group-hover-rotateY-180:hover .card-inner {
-  transform: rotateY(180deg);
+.site ::selection { background: var(--color-signal); color: var(--color-ink); }
+.site :focus-visible { outline: 2px solid var(--color-signal); outline-offset: 3px; }
+
+.label {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.card-front, .card-back {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+/* Condensed caps: the name, section numbers, big display lines */
+.display {
+  font-family: var(--font-grotesk);
+  font-stretch: 62%;
+  font-weight: 800;
+  line-height: 0.84;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
 }
 
-.card-back {
-  transform: rotateY(180deg);
+.italic-serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-stretch: normal;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.balance { text-wrap: balance; }
+
+/* Paper sections sit above the fixed signal field and hide it */
+.paper {
+  position: relative;
+  z-index: 2;
+  background: var(--color-bone);
+  color: var(--color-ink);
+}
+.paper ::selection { background: var(--color-ink); color: var(--color-bone); }
+.site .paper :focus-visible { outline-color: var(--color-signal-deep); }
+
+/* Underline that draws in from the left on hover / focus */
+.u-link {
+  background: linear-gradient(currentColor, currentColor) no-repeat 100% 100% / 0 1px;
+  transition: background-size 0.5s var(--ease-out-expo);
+}
+.u-link:hover,
+.u-link:focus-visible {
+  background-position: 0 100%;
+  background-size: 100% 1px;
+}
+
+/* Static film grain over the whole site */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Header reads on ink and bone alike */
+.site-header { mix-blend-mode: difference; color: #ece7df; }
+
+/* Until the motion engine has set initial states, hide what it will reveal.
+   `js` is set by an inline script; `motion-ready` by the engine (or a 4s
+   failsafe), so content is never stuck hidden and is visible without JS. */
+.js:not(.motion-ready) [data-split],
+.js:not(.motion-ready) [data-fade],
+.js:not(.motion-ready) [data-clip],
+.js:not(.motion-ready) [data-intro] {
+  opacity: 0;
+}
+
+/* Preloader only exists for JS users on their first page of the session */
+.preloader { display: none; }
+.js .preloader { display: flex; }
+.js[data-intro='seen'] .preloader { display: none; }
+
+/* Lenis */
+html.lenis,
+html.lenis body { height: auto; }
+.lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
+.lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* Pointer label bubble (fine pointers only, mounted by Cursor.tsx) */
+.cursor-bubble {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  border-radius: 9999px;
+  background: var(--color-signal);
+  color: var(--color-ink);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform: scale(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .preloader { display: none; }
+  .js:not(.motion-ready) [data-split],
+  .js:not(.motion-ready) [data-fade],
+  .js:not(.motion-ready) [data-clip],
+  .js:not(.motion-ready) [data-intro] {
+    opacity: 1;
+  }
+}
+
+/* The About page prints as a clean one-column CV */
+@media print {
+  .site-header,
+  .site-footer,
+  .grain,
+  .cursor-bubble,
+  .no-print {
+    display: none !important;
+  }
+  .site,
+  .site .paper {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .site * { color: #000 !important; border-color: #bbb !important; }
+  .print-break { break-inside: avoid; }
+}
+
+/* ───────────────────── CreaTune (v3) ───────────────────── */
+
+.ct ::selection { background: var(--color-lavender); color: var(--color-ink); }
+.site.ct :focus-visible { outline-color: var(--color-lavender); }
+.ct .cursor-bubble { background: var(--color-lavender); }
+
+/* The portfolio's display face on the opposite axis: expanded caps */
+.display-wide {
+  font-family: var(--font-grotesk);
+  font-stretch: 125%;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+/* Now-playing glyph: three bars bouncing */
+.ct-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 16px;
+  height: 14px;
+}
+.ct-eq span {
+  flex: 1;
+  height: 100%;
+  background: currentColor;
+  transform-origin: bottom;
+  animation: ctEq 0.9s ease-in-out infinite alternate;
+}
+.ct-eq span:nth-child(2) { animation-delay: 0.2s; animation-duration: 0.7s; }
+.ct-eq span:nth-child(3) { animation-delay: 0.35s; animation-duration: 1.1s; }
+@keyframes ctEq {
+  0% { transform: scaleY(0.15); }
+  100% { transform: scaleY(1); }
+}
+
+/* Player-bar level meter: bars are scaled from the Web Audio analyser inline */
+.ct-viz { display: flex; align-items: flex-end; gap: 2px; }
+.ct-viz span {
+  flex: 1;
+  height: 100%;
+  transform: scaleY(0.06);
+  transform-origin: bottom;
+  background: linear-gradient(180deg, var(--color-mauve), var(--color-dusk));
+  opacity: 0.85;
+  will-change: transform;
+}
+
+/* Range inputs (seek / volume): a hairline with a mauve fill set via --p */
+.ct-range {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 16px;
+  background: transparent;
+  cursor: pointer;
+}
+.ct-range::-webkit-slider-runnable-track {
+  height: 2px;
+  background: linear-gradient(to right, var(--color-mauve) var(--p, 0%), rgb(236 231 223 / 0.18) var(--p, 0%));
+}
+.ct-range::-moz-range-track {
+  height: 2px;
+  background: linear-gradient(to right, var(--color-mauve) var(--p, 0%), rgb(236 231 223 / 0.18) var(--p, 0%));
+}
+.ct-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -5px;
+  border-radius: 9999px;
+  background: #ece7df;
+  transition: transform 0.2s;
+}
+.ct-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 9999px;
+  background: #ece7df;
+}
+.ct-range:hover::-webkit-slider-thumb { transform: scale(1.3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-eq span { animation: none; transform: scaleY(0.6); }
 }

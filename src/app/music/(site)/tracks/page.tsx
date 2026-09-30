@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import TracksView from '@/components/creatune/TracksView';
 
 export const metadata: Metadata = {
-  title: 'All Songs — CreaTune',
+  title: 'Songs',
   description: 'The full CreaTune catalogue.',
 };
 

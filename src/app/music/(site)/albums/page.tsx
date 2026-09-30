@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import AlbumsView from '@/components/creatune/AlbumsView';
 
 export const metadata: Metadata = {
-  title: 'Albums — CreaTune',
+  title: 'Albums',
   description: 'CreaTune albums and releases.',
 };
 

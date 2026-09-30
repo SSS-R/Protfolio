@@ -1,199 +1,208 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { usePlayer, PlayIcon, PauseIcon, SoundCloudIcon, YouTubeIcon, LOGO_FALLBACK } from '../CreaTunePlayer';
+import { usePlayer, PlayIcon, PauseIcon, Cover, PRIMARY_BUTTON, GHOST_BUTTON, SoundCloudIcon, YouTubeIcon } from '../CreaTunePlayer';
 import TrackList from './TrackList';
-import { Reveal, RevealGroup, RevealItem } from '../motion';
-import type { CreaTuneTrack } from '../creatune-types';
-
-// Deterministic waveform silhouette (hydration-safe)
-const WAVE_BARS = Array.from({ length: 72 }, (_, i) => {
-  const a = Math.abs(Math.sin(i * 0.55 + 0.4));
-  const b = Math.abs(Math.sin(i * 0.13 + 1.2));
-  const mid = Math.exp(-Math.pow((i - 36) / 22, 2));
-  return Math.round(6 + 88 * a * (0.25 + 0.75 * b) * (0.3 + 0.7 * mid));
-});
-function waveColor(i: number, alpha: string) {
-  if (i % 7 === 0) return `linear-gradient(180deg, #C9A9C0${alpha}, #C9A9C000)`;
-  if (i % 3 === 0) return `linear-gradient(180deg, #A9A3CE${alpha}, #A9A3CE00)`;
-  return `linear-gradient(180deg, #565C7E${alpha}, #565C7E00)`;
-}
+import Spectrum from './Spectrum';
 
 export default function LandingView() {
-  const { studio, tagline, links, tracks, albums, news, nextRelease, playFrom, toggleMain, isPlaying, current, coverFor } = usePlayer();
+  const { studio, tagline, links, tracks, albums, news, nextRelease, playFrom, toggleMain, isPlaying, current, coverFor, openLyrics } =
+    usePlayer();
 
   const socialLinks = [
     { label: 'SoundCloud', href: links.soundcloud, icon: SoundCloudIcon },
     { label: 'YouTube', href: links.youtube, icon: YouTubeIcon },
   ].filter((l) => l.href) as { label: string; href: string; icon: typeof SoundCloudIcon }[];
 
-  const latest = tracks[tracks.length - 1] as CreaTuneTrack | undefined;
+  const latest = tracks[tracks.length - 1];
+  const latestPlaying = !!latest && current?.id === latest.id && isPlaying;
   const totalListens = tracks.reduce((sum, t) => sum + (t.plays || 0), 0);
 
   // Admin-picked featured, else top-played
   const picked = tracks.filter((t) => t.featured);
   const featured = (picked.length ? picked : [...tracks].sort((a, b) => (b.plays || 0) - (a.plays || 0))).slice(0, 5);
-
-  const hasNextRelease = nextRelease && (nextRelease.title || nextRelease.note);
+  const hasNews = !!(news?.title || news?.body);
+  const hasNextRelease = !!(nextRelease && (nextRelease.title || nextRelease.note));
 
   return (
     <>
-      {/* HERO */}
-      <section className="relative overflow-hidden border-b border-[#262838]">
-        <div className="absolute inset-x-0 bottom-0 h-64 flex items-end gap-[3px] px-2 pointer-events-none blur-2xl" aria-hidden="true">
-          {WAVE_BARS.map((h, i) => (
-            <span key={i} className={`flex-1 rounded-full ${i % 2 === 1 ? 'hidden sm:block' : ''}`} style={{ height: `${h * 2.6}px`, background: waveColor(i, 'AA') }} />
-          ))}
-        </div>
-        <div className="absolute inset-x-0 bottom-0 h-64 flex items-end gap-[3px] px-2 pointer-events-none" aria-hidden="true">
-          {WAVE_BARS.map((h, i) => (
-            <span key={i} className={`flex-1 rounded-full ${i % 2 === 1 ? 'hidden sm:block' : ''}`} style={{ height: `${h * 2.2}px`, background: waveColor(i, '99') }} />
-          ))}
-        </div>
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none" aria-hidden="true" />
+      {/* Hero: the live spectrum under the wordmark */}
+      <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden px-5 pb-32 pt-28 md:px-10 md:pb-36" aria-labelledby="ct-title">
+        <Spectrum className="absolute inset-x-0 top-[9vh] h-[46svh] w-full md:top-[4vh] md:h-[74svh]" />
 
-        <RevealGroup preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-24 pb-36 md:pb-44 relative flex flex-col items-center">
-          <RevealItem preset="smooth" className="rounded-full p-[3px] bg-gradient-to-b from-[#A9A3CE66] to-transparent">
-            <Image src={LOGO_FALLBACK} alt={`${studio} logo`} width={140} height={140} priority className="rounded-full border border-[#EDEBF4]/15" style={{ boxShadow: '0 0 60px rgba(169,163,206,0.4), 0 0 140px rgba(201,169,192,0.2)' }} />
-          </RevealItem>
-          <RevealItem preset="smooth">
-            <h1 className="mt-10 text-center font-[family-name:var(--font-display)] font-semibold uppercase text-[9vw] md:text-6xl lg:text-7xl tracking-[0.4em] md:tracking-[0.5em] -mr-[0.4em] leading-none" style={{ textShadow: '0 0 36px rgba(169,163,206,0.4), 0 0 90px rgba(201,169,192,0.2)' }}>
-              {studio}
-            </h1>
-          </RevealItem>
-          <RevealItem preset="smooth">
-            <p className="mt-6 text-center text-[11px] uppercase tracking-[0.35em] text-[#9BA0B4] font-[family-name:var(--font-display)] max-w-xl">{tagline}</p>
-          </RevealItem>
-          <RevealItem preset="smooth" className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <button onClick={toggleMain} className="rounded-full bg-[#A9A3CE] text-black pl-5 pr-6 py-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-display)] hover:bg-[#EDEBF4] transition-colors duration-200 cursor-pointer" style={{ boxShadow: '0 0 32px rgba(169,163,206,0.35)' }}>
-              {isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
-              {isPlaying ? 'Pause' : 'Listen now'}
-            </button>
-            {socialLinks.map(({ label, href, icon: Icon }) => (
-              <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#3B3E52] px-5 py-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] font-[family-name:var(--font-display)] text-[#9BA0B4] hover:border-[#C9A9C0] hover:text-[#C9A9C0] transition-colors duration-200">
-                <Icon />
-                {label}
-              </a>
-            ))}
-          </RevealItem>
-        </RevealGroup>
+        <div className="relative">
+          <p className="label mx-auto flex w-fit items-center justify-center gap-2 bg-ink px-3 py-1.5 text-mauve" aria-live="polite">
+            <span className={`size-1.5 rounded-full bg-mauve ${isPlaying ? 'animate-pulse' : 'opacity-50'}`} />
+            {isPlaying && current ? `Live spectrum — ${current.title}` : 'Idle — press play to see the sound'}
+          </p>
+          <h1 id="ct-title" data-split className="display-wide mt-5 text-center text-[12.4vw] md:text-[11.2vw]">
+            {studio}
+          </h1>
+          <div className="mt-8 flex flex-col items-center justify-between gap-6 md:flex-row md:items-end" data-fade>
+            <p className="max-w-[36ch] text-center text-[17px] leading-relaxed text-dim md:text-left">{tagline}</p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <button type="button" onClick={toggleMain} data-magnetic className={PRIMARY_BUTTON}>
+                {isPlaying ? <PauseIcon className="size-4" /> : <PlayIcon className="size-4" />}
+                {isPlaying ? 'Pause' : 'Listen now'}
+              </button>
+              {socialLinks.map(({ label, href, icon: Icon }) => (
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" className={GHOST_BUTTON}>
+                  <Icon />
+                  {label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* CATALOGUE + LATEST RELEASE */}
-      {tracks.length > 0 && (
-        <RevealGroup as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <RevealItem preset="smooth" className="md:col-span-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex items-center gap-4 md:gap-5">
-            <Image src={coverFor(latest)} alt="" width={72} height={72} className="rounded-[14px] border border-white/10 shrink-0 w-14 h-14 md:w-[72px] md:h-[72px] object-cover" />
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0] font-[family-name:var(--font-display)]">Latest release</p>
-              <p className="mt-1 text-lg md:text-2xl font-bold tracking-tight truncate">{latest?.title}</p>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4] mt-0.5 truncate">
-                {latest?.artist} · {latest?.plays.toLocaleString()} listens · {latest?.duration}
-              </p>
+      {/* Catalogue band */}
+      {tracks.length > 0 ? (
+        <div className="label grid grid-cols-2 border-y border-line px-5 md:grid-cols-4 md:px-10" data-fade>
+          {[
+            ['Tracks', String(tracks.length).padStart(2, '0')],
+            ['Listens', totalListens.toLocaleString()],
+            ['Albums', String(albums.length).padStart(2, '0')],
+            ['Latest', latest?.title ?? '—'],
+          ].map(([k, v]) => (
+            <div key={k} className="flex items-baseline justify-between gap-4 border-line py-5 odd:pr-5 md:border-r md:px-5 md:first:pl-0 md:last:border-r-0">
+              <span className="text-dim">{k}</span>
+              <span className="truncate text-bone">{v}</span>
             </div>
-            {latest && (
-              <button
-                onClick={() => playFrom([latest], 0)}
-                aria-label={`Play ${latest.title}`}
-                className="w-12 h-12 rounded-full bg-[#A9A3CE] text-black flex items-center justify-center hover:bg-[#EDEBF4] hover:scale-105 transition-all duration-200 cursor-pointer shrink-0"
-                style={{ boxShadow: '0 0 24px rgba(169,163,206,0.3)' }}
-              >
-                {current?.id === latest.id && isPlaying ? <PauseIcon className="w-5 h-5" /> : <PlayIcon className="w-5 h-5" />}
-              </button>
-            )}
-          </RevealItem>
+          ))}
+        </div>
+      ) : null}
 
-          <RevealItem preset="smooth" className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 flex flex-col justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#9BA0B4] font-[family-name:var(--font-display)]">Catalogue</p>
-            <div className="mt-4 flex items-end justify-between gap-4">
+      {/* Latest release */}
+      {latest ? (
+        <section className="grid gap-10 px-5 py-28 md:grid-cols-12 md:gap-6 md:px-10 md:py-40" aria-labelledby="latest-title">
+          <button
+            type="button"
+            onClick={() => playFrom([latest], 0)}
+            data-cursor={latestPlaying ? 'Pause' : 'Play'}
+            aria-label={`${latestPlaying ? 'Pause' : 'Play'} ${latest.title}`}
+            className="group relative block md:col-span-5"
+          >
+            <div data-clip>
+              <Cover src={coverFor(latest)} title={latest.title} className="aspect-square w-full" sizes="(min-width: 768px) 40vw, 100vw" />
+            </div>
+            <span className="absolute bottom-5 left-5 grid size-14 place-items-center rounded-full bg-lavender text-ink transition-transform duration-500 group-hover:scale-110">
+              {latestPlaying ? <PauseIcon /> : <PlayIcon />}
+            </span>
+          </button>
+          <div className="flex flex-col justify-end md:col-span-6 md:col-start-7">
+            <p className="label text-mauve" data-scramble>
+              (Latest release)
+            </p>
+            <h2 id="latest-title" data-split className="mt-5 text-[13vw] font-medium leading-[0.92] tracking-[-0.05em] md:text-[6vw]">
+              {latest.title}
+            </h2>
+            <dl className="label mt-10 grid grid-cols-3 gap-6 border-t border-line pt-6" data-fade>
               <div>
-                <p className="text-3xl font-[family-name:var(--font-display)] font-bold tabular-nums text-[#A9A3CE] leading-none">{tracks.length.toString().padStart(2, '0')}</p>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#9BA0B4] mt-1.5">Tracks</p>
+                <dt className="text-dim">Artist</dt>
+                <dd className="mt-2">{latest.artist}</dd>
               </div>
-              <div className="text-right">
-                <p className="text-3xl font-[family-name:var(--font-display)] font-bold tabular-nums text-[#EDEBF4] leading-none">{totalListens.toLocaleString()}</p>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#9BA0B4] mt-1.5">Total listens</p>
+              <div>
+                <dt className="text-dim">Length</dt>
+                <dd className="mt-2 tabular-nums">{latest.duration}</dd>
               </div>
+              <div>
+                <dt className="text-dim">Listens</dt>
+                <dd className="mt-2 tabular-nums">{latest.plays.toLocaleString()}</dd>
+              </div>
+            </dl>
+            <div className="mt-10 flex flex-wrap gap-3" data-fade>
+              <button type="button" onClick={() => playFrom([latest], 0)} className={PRIMARY_BUTTON}>
+                {latestPlaying ? <PauseIcon className="size-4" /> : <PlayIcon className="size-4" />}
+                {latestPlaying ? 'Pause' : 'Play the single'}
+              </button>
+              {latest.lyrics?.trim() ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (current?.id !== latest.id) playFrom([latest], 0);
+                    openLyrics();
+                  }}
+                  className={GHOST_BUTTON}
+                >
+                  Read the lyrics
+                </button>
+              ) : null}
             </div>
-          </RevealItem>
-        </RevealGroup>
-      )}
-
-      {/* NEWS + NEXT RELEASE */}
-      {(news?.title || news?.body || hasNextRelease) && (
-        <RevealGroup as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(news?.title || news?.body) && (
-            <RevealItem preset="smooth" className={`rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm p-5 md:p-6 ${hasNextRelease ? 'md:col-span-2' : 'md:col-span-3'}`}>
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A9C0] font-[family-name:var(--font-display)]">News</p>
-              {news?.title && <p className="mt-2 text-xl font-bold tracking-tight">{news.title}</p>}
-              {news?.body && <p className="mt-2 text-sm leading-7 text-[#CFCDDE] whitespace-pre-wrap">{news.body}</p>}
-            </RevealItem>
-          )}
-          {hasNextRelease && (
-            <RevealItem preset="smooth" className="rounded-2xl border border-[#A9A3CE]/25 bg-[#A9A3CE]/[0.05] backdrop-blur-sm p-5 md:p-6 flex flex-col">
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#A9A3CE] font-[family-name:var(--font-display)]">Next release</p>
-              <div className="mt-3 flex items-center gap-4">
-                <Image src={nextRelease?.cover || LOGO_FALLBACK} alt="" width={64} height={64} className="rounded-xl border border-white/10 object-cover w-16 h-16 shrink-0" />
-                <div className="min-w-0">
-                  {nextRelease?.title && <p className="text-lg font-bold tracking-tight truncate">{nextRelease.title}</p>}
-                  {nextRelease?.date && <p className="text-[11px] uppercase tracking-[0.2em] text-[#C9A9C0] mt-0.5">{nextRelease.date}</p>}
-                </div>
-              </div>
-              {nextRelease?.note && <p className="mt-3 text-sm leading-6 text-[#CFCDDE] whitespace-pre-wrap">{nextRelease.note}</p>}
-            </RevealItem>
-          )}
-        </RevealGroup>
-      )}
-
-      {/* FEATURED / TOP SONGS */}
-      {featured.length > 0 && (
-        <Reveal as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-10">
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden">
-            <div className="flex items-baseline justify-between px-5 md:px-6 pt-5 pb-3 border-b border-white/[0.06]">
-              <h2 className="text-xs font-bold uppercase tracking-[0.3em] font-[family-name:var(--font-display)]">
-                {picked.length ? 'Featured' : 'Top songs'}
-              </h2>
-              <Link href="/music/tracks" className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9BA0B4] hover:text-[#A9A3CE] transition-colors">
-                All songs →
-              </Link>
-            </div>
-            <TrackList list={featured} />
           </div>
-        </Reveal>
-      )}
+        </section>
+      ) : null}
 
-      {/* ALBUMS PREVIEW */}
-      {albums.length > 0 && (
-        <Reveal as="section" preset="smooth" className="max-w-6xl mx-auto px-5 md:px-8 mt-10">
-          <div className="flex items-baseline justify-between border-b border-white/10 pb-3">
-            <h2 className="text-xs font-bold uppercase tracking-[0.3em] font-[family-name:var(--font-display)]">Albums</h2>
-            <Link href="/music/albums" className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9BA0B4] hover:text-[#A9A3CE] transition-colors">
-              All albums →
+      {/* Featured / top songs */}
+      {featured.length > 0 ? (
+        <section className="px-5 md:px-10" aria-labelledby="featured-title">
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <p className="label text-mauve" data-scramble>
+                ({picked.length ? 'Featured' : 'Most played'})
+              </p>
+              <h2 id="featured-title" data-split className="mt-4 text-[11vw] font-medium leading-[0.92] tracking-[-0.05em] md:text-[5vw]">
+                On <em className="italic-serif text-mauve">repeat</em>
+              </h2>
+            </div>
+            <Link href="/music/tracks" className="label u-link shrink-0">
+              All songs ↗
             </Link>
           </div>
-          <RevealGroup preset="smooth" className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {albums.slice(0, 4).map((a) => (
-              <RevealItem key={a.id} preset="smooth">
-                <Link href={`/music/albums/${a.id}`} className="group">
-                  <div className="aspect-square rounded-xl overflow-hidden border border-white/10">
-                    <Image src={a.cover || LOGO_FALLBACK} alt="" width={300} height={300} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  </div>
-                  <p className="mt-2 font-bold truncate">{a.title}</p>
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4]">{a.year || 'Album'}</p>
-                </Link>
-              </RevealItem>
-            ))}
-          </RevealGroup>
-        </Reveal>
-      )}
+          <div className="mt-12">
+            <TrackList list={featured} />
+          </div>
+        </section>
+      ) : null}
 
-      {/* Footer */}
-      <section className="max-w-6xl mx-auto px-5 md:px-8 mt-16 pt-8 border-t border-[#1C1D2A] text-[11px] uppercase tracking-[0.2em] text-[#9BA0B4] flex items-center justify-between gap-2 font-[family-name:var(--font-display)]">
-        <span>© 2026 {studio} — All sound, one desk.</span>
-        <Image src={LOGO_FALLBACK} alt="" width={32} height={32} className="rounded-full border border-[#3B3E52] opacity-80" />
-      </section>
+      {/* News + next release */}
+      {hasNews || hasNextRelease ? (
+        <section className="mt-28 grid gap-12 px-5 md:mt-40 md:grid-cols-12 md:gap-6 md:px-10" aria-label="Studio news">
+          {hasNews ? (
+            <article className={`border-t border-line pt-6 ${hasNextRelease ? 'md:col-span-7' : 'md:col-span-8'}`} data-fade>
+              <p className="label text-mauve">(From the studio)</p>
+              {news?.title ? <h2 className="mt-5 text-[8vw] font-medium leading-[0.95] tracking-[-0.04em] md:text-[3.4vw]">{news.title}</h2> : null}
+              {news?.body ? <p className="mt-6 max-w-[52ch] whitespace-pre-wrap text-[17px] leading-relaxed text-dim">{news.body}</p> : null}
+            </article>
+          ) : null}
+          {hasNextRelease ? (
+            <article className="border-t border-mauve/40 pt-6 md:col-span-4 md:col-start-9" data-fade="0.1">
+              <p className="label text-mauve">(Next release)</p>
+              <div className="mt-5 flex items-center gap-4">
+                <Cover src={nextRelease?.cover || ''} title={nextRelease?.title || studio} className="size-20 shrink-0" sizes="80px" />
+                <div className="min-w-0">
+                  {nextRelease?.title ? <p className="truncate text-[24px] font-medium tracking-[-0.03em]">{nextRelease.title}</p> : null}
+                  {nextRelease?.date ? <p className="label mt-1 text-mauve">{nextRelease.date}</p> : null}
+                </div>
+              </div>
+              {nextRelease?.note ? <p className="mt-5 whitespace-pre-wrap text-[15px] leading-relaxed text-dim">{nextRelease.note}</p> : null}
+            </article>
+          ) : null}
+        </section>
+      ) : null}
+
+      {/* Albums */}
+      {albums.length > 0 ? (
+        <section className="mt-28 px-5 md:mt-40 md:px-10" aria-labelledby="albums-title">
+          <div className="flex items-end justify-between border-b border-line pb-6">
+            <h2 id="albums-title" data-split className="display-wide text-[9vw] md:text-[4.4vw]">
+              Albums
+            </h2>
+            <Link href="/music/albums" className="label u-link">
+              All albums ↗
+            </Link>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-5 lg:grid-cols-4">
+            {albums.slice(0, 4).map((a) => (
+              <Link key={a.id} href={`/music/albums/${a.id}`} className="group" data-fade>
+                <Cover src={a.cover || ''} title={a.title} className="aspect-square w-full transition-transform duration-700 group-hover:scale-[0.98]" sizes="25vw" />
+                <p className="mt-3 truncate text-[19px] font-medium tracking-[-0.02em]">{a.title}</p>
+                <p className="label mt-1 text-dim">{a.year || 'Album'}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </>
   );
 }
