@@ -8,6 +8,13 @@ interface CreaTuneData {
 
 // POST /api/creatune/play - Count a listen (public)
 export async function POST(request: Request) {
+  // On Vercel every count would be a Blob put(). The Hobby plan allows 2,000 writes
+  // a month and then blocks Blob for 30 days, so anyone hammering this public route
+  // could take the music offline. Counts are therefore not persisted in production
+  // (the player still bumps the number live for the visitor).
+  // ponytail: frozen counts on Vercel; use a Redis counter if they ever matter.
+  if (process.env.BLOB_READ_WRITE_TOKEN) return NextResponse.json({ success: true });
+
   try {
     const { id } = await request.json();
     if (!id) {

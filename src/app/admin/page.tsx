@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAdminAuthed, getAdminPassword, setAdminPassword } from '@/hooks/useAdminSession';
+import { uploadFile } from '@/lib/clientUpload';
 import type {
   PortfolioData,
   ContactMessage,
@@ -154,33 +155,18 @@ export default function Admin() {
     if (!file) return;
 
     const storedPass = getAdminPassword() || '';
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('filename', `${pathType}_${Date.now()}_${file.name}`);
 
     setStatusMessage('UPLOADING IMAGE...');
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: {
-          'x-admin-password': storedPass
-        },
-        body: formData
-      });
-      if (res.ok) {
-        const result = await res.json();
-        if (pathType === 'avatar') {
-          setPortfolioData((prev) => (prev ? { ...prev, profile: { ...prev.profile, avatar: result.url } } : prev));
-        } else if (pathType === 'project' && projectIdx !== undefined) {
-          setPortfolioData((prev) => (prev ? { ...prev, projects: replaceAt(prev.projects, projectIdx, { image: result.url }) } : prev));
-        }
-        setStatusMessage('IMAGE UPLOAD COMPLETED.');
-      } else {
-        const errData = await res.json();
-        setStatusMessage(`UPLOAD ERROR: ${errData.error || 'Failed'}`);
+      const url = await uploadFile(file, `${pathType}_${Date.now()}_${file.name}`, storedPass);
+      if (pathType === 'avatar') {
+        setPortfolioData((prev) => (prev ? { ...prev, profile: { ...prev.profile, avatar: url } } : prev));
+      } else if (pathType === 'project' && projectIdx !== undefined) {
+        setPortfolioData((prev) => (prev ? { ...prev, projects: replaceAt(prev.projects, projectIdx, { image: url }) } : prev));
       }
-    } catch {
-      setStatusMessage('UPLOAD ERROR: Connection failed.');
+      setStatusMessage('IMAGE UPLOAD COMPLETED.');
+    } catch (err) {
+      setStatusMessage(`UPLOAD ERROR: ${err instanceof Error ? err.message : 'Failed'}`);
     } finally {
       setTimeout(() => setStatusMessage(''), 3000);
     }

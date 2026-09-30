@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { CreaTuneTrack, CreaTuneAlbum, CreaTuneNews, CreaTuneNextRelease } from './creatune-types';
 import { useAdminAuthed, getAdminPassword, setAdminPassword } from '@/hooks/useAdminSession';
+import { uploadFile } from '@/lib/clientUpload';
 
 const inputClass =
   'border border-[#3B3E52] bg-[#101119] text-[#EDEBF4] px-3 py-2 text-sm outline-none focus:border-[#A9A3CE] disabled:opacity-50 rounded-lg';
@@ -19,18 +20,9 @@ function stampedName(name: string): string {
   return `${Date.now()}_${name}`;
 }
 
-// Upload an image via the shared upload API; returns its public URL
-async function uploadImage(file: File, pass: string): Promise<string> {
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('filename', `cover_${Date.now()}_${file.name}`);
-  const res = await fetch('/api/upload', { method: 'POST', headers: { 'x-admin-password': pass }, body: fd });
-  if (!res.ok) {
-    const e = await res.json().catch(() => ({}));
-    throw new Error(e.error || `Upload failed (${res.status})`);
-  }
-  const { url } = await res.json();
-  return url as string;
+// Upload a cover image; returns its public URL
+function uploadImage(file: File, pass: string): Promise<string> {
+  return uploadFile(file, `cover_${Date.now()}_${file.name}`, pass);
 }
 
 const LOGO = '/images/creatune-logo.png';
@@ -522,21 +514,13 @@ export default function ClientCreaTuneAdmin() {
     try {
       const duration = await readDuration(file);
 
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('filename', stampedName(file.name));
-
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'x-admin-password': pass },
-        body: formData,
-      });
-      if (!uploadRes.ok) {
-        const err = await uploadRes.json().catch(() => ({}));
-        setStatusMessage(`Upload failed: ${err.error || uploadRes.status}`);
+      let url: string;
+      try {
+        url = await uploadFile(file, stampedName(file.name), pass);
+      } catch (err) {
+        setStatusMessage(`Upload failed: ${err instanceof Error ? err.message : 'unknown error'}`);
         return;
       }
-      const { url } = await uploadRes.json();
 
       let cover: string | undefined;
       if (coverFile) {

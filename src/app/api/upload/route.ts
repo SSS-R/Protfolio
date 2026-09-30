@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { saveUpload } from '@/lib/store';
 import { requireAdmin } from '@/lib/auth';
+import { IMAGE_TYPES, AUDIO_TYPES, MAX_IMAGE_SIZE, MAX_AUDIO_SIZE } from '@/lib/uploadTypes';
 
-// POST /api/upload
+// POST /api/upload - server-side upload. Local dev only in practice: on Vercel a
+// request body over 4.5MB is rejected before it gets here, so the admin UI uses
+// /api/upload/token and uploads straight to Blob there.
 export async function POST(request: Request) {
   try {
     const authError = requireAdmin(request);
@@ -14,26 +17,6 @@ export async function POST(request: Request) {
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
-
-    // Raster images and audio only (SVG excluded: it can carry scripts)
-    const IMAGE_TYPES: Record<string, string> = {
-      'image/png': '.png',
-      'image/jpeg': '.jpg',
-      'image/webp': '.webp',
-      'image/gif': '.gif',
-    };
-    const AUDIO_TYPES: Record<string, string> = {
-      'audio/mpeg': '.mp3',
-      'audio/mp3': '.mp3',
-      'audio/wav': '.wav',
-      'audio/x-wav': '.wav',
-      'audio/ogg': '.ogg',
-      'audio/mp4': '.m4a',
-      'audio/x-m4a': '.m4a',
-      'audio/flac': '.flac',
-    };
-    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-    const MAX_AUDIO_SIZE = 30 * 1024 * 1024; // 30MB
 
     const isAudio = file.type in AUDIO_TYPES;
     const extension = IMAGE_TYPES[file.type] || AUDIO_TYPES[file.type];
