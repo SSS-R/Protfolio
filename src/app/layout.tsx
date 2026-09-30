@@ -60,10 +60,14 @@ const description =
   'Computer Engineering student at BRAC University building full-stack systems and AI agent tooling, and researching quantum cryptography. Based in Dhaka.';
 
 export const metadata: Metadata = {
-  // Uses the deployment URL Vercel injects; falls back to localhost in dev.
+  // Absolute URLs for share images. VERCEL_PROJECT_PRODUCTION_URL is the public
+  // production domain; VERCEL_URL (per-deployment) can sit behind Vercel's
+  // Deployment Protection, which would hide the image from link-preview bots.
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : 'http://localhost:3000'),
   ),
   title: { default: 'Sultan Sajed Shahriar — Engineer', template: '%s — Sultan Sajed Shahriar' },
   description,
