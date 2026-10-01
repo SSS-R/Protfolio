@@ -1,25 +1,15 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import {
-  AdditiveBlending,
-  BufferAttribute,
-  BufferGeometry,
-  Color,
-  PerspectiveCamera,
-  Points,
-  Scene,
-  ShaderMaterial,
-  Vector2,
-  Vector4,
-  WebGLRenderer,
-} from 'three';
 import { gsap, ScrollTrigger, onIntro, prefersReducedMotion } from './motion';
 
 // The home page's one WebGL layer. A point cloud that starts as noise and
 // resolves into a formation per section — sphere (a Bloch-sphere qubit), lattice
 // (lattice cryptography), wave (sound), ring (an open channel). Sections opt in
 // with data-formation="<state>"; paper sections simply cover the canvas.
+//
+// Plain WebGL (one program, one draw call): camera, rotation and projection are
+// done in the vertex shader, so no 3D library ships to the browser.
 
 type Formation = 'sphere' | 'lattice' | 'wave' | 'ring';
 type State = { f: Formation; x: number; y: number; s: number; o: number };
@@ -108,6 +98,7 @@ function buildFormations(count: number) {
 }
 
 const vertex = /* glsl */ `
+  attribute vec3 aSphere;
   attribute vec3 aLattice;
   attribute vec3 aWave;
   attribute vec3 aRing;
@@ -117,8 +108,11 @@ const vertex = /* glsl */ `
   uniform float uChaos;
   uniform float uSize;
   uniform float uAspect;
+  uniform float uFocal;   // 1 / tan(fov / 2)
   uniform vec2 uMouse;
   uniform vec4 uW;
+  uniform vec3 uRot;      // euler x, y, z (applied z → y → x)
+  uniform vec3 uPlace;    // offset x, offset y, scale
   varying float vObserve;
   varying float vAlpha;
   varying float vSeed;
@@ -130,7 +124,7 @@ const vertex = /* glsl */ `
     // tilt the field toward the camera
     wave = vec3(wave.x, h * 0.93 - wave.z * 0.36, h * 0.36 + wave.z * 0.93);
 
-    vec3 p = position * uW.x + aLattice * uW.y + wave * uW.z + aRing * uW.w;
+    vec3 p = aSphere * uW.x + aLattice * uW.y + wave * uW.z + aRing * uW.w;
 
     vec3 jitter = vec3(
       sin(aSeed * 91.7 + uTime * 0.9),
@@ -143,8 +137,17 @@ const vertex = /* glsl */ `
     vec3 scatter = normalize(jitter + vec3(0.001)) * (7.0 + aSeed * 6.0);
     p = mix(scatter, p, uIntro);
 
-    vec4 mv = modelViewMatrix * vec4(p, 1.0);
-    gl_Position = projectionMatrix * mv;
+    // Model: scale, rotate (z, y, x), translate; view: camera at z = 9.5.
+    vec3 q = p * uPlace.z;
+    float c = cos(uRot.z), s = sin(uRot.z);
+    q = vec3(c * q.x - s * q.y, s * q.x + c * q.y, q.z);
+    c = cos(uRot.y); s = sin(uRot.y);
+    q = vec3(c * q.x + s * q.z, q.y, -s * q.x + c * q.z);
+    c = cos(uRot.x); s = sin(uRot.x);
+    q = vec3(q.x, c * q.y - s * q.z, s * q.y + c * q.z);
+    vec3 mv = q + vec3(uPlace.xy, -9.5);
+
+    gl_Position = vec4(mv.x * uFocal / uAspect, mv.y * uFocal, 0.0, -mv.z);
 
     // Observation: near the pointer, points brighten, turn signal-orange, part slightly.
     vec2 ndc = gl_Position.xy / gl_Position.w;
@@ -160,8 +163,7 @@ const vertex = /* glsl */ `
 `;
 
 const fragment = /* glsl */ `
-  uniform vec3 uBone;
-  uniform vec3 uSignal;
+  precision mediump float;
   uniform float uOpacity;
   varying float vObserve;
   varying float vAlpha;
@@ -172,10 +174,24 @@ const fragment = /* glsl */ `
     if (d > 0.5) discard;
     float a = smoothstep(0.5, 0.05, d);
     float accent = max(vObserve, step(vSeed, 0.035));
-    vec3 col = mix(uBone, uSignal, accent);
+    vec3 col = mix(vec3(0.925, 0.906, 0.875), vec3(1.0, 0.353, 0.122), accent);
     gl_FragColor = vec4(col, a * (0.35 + 0.5 * vAlpha + 0.4 * vObserve) * uOpacity);
   }
 `;
+
+function program(gl: WebGLRenderingContext) {
+  const compile = (type: number, src: string) => {
+    const sh = gl.createShader(type)!;
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    return sh;
+  };
+  const p = gl.createProgram()!;
+  gl.attachShader(p, compile(gl.VERTEX_SHADER, vertex));
+  gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fragment));
+  gl.linkProgram(p);
+  return gl.getProgramParameter(p, gl.LINK_STATUS) ? p : null;
+}
 
 export default function SignalField() {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -183,205 +199,245 @@ export default function SignalField() {
   useEffect(() => {
     const el = canvas.current;
     if (!el) return;
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
 
-    let renderer: WebGLRenderer;
-    try {
-      renderer = new WebGLRenderer({ canvas: el, antialias: false, alpha: true, powerPreference: 'high-performance' });
-    } catch {
-      el.remove();
-      return;
-    }
+    // Start once the page is idle: hydration, first paint and the reveals come
+    // first; the field fades in behind them.
+    const begin = () => {
+      if (cancelled) return;
+      const gl = el.getContext('webgl', { alpha: true, antialias: false, depth: false, powerPreference: 'high-performance' });
+      const prog = gl && program(gl);
+      if (!gl || !prog) {
+        el.remove();
+        return;
+      }
 
-    const reduce = prefersReducedMotion();
-    const mobile = window.matchMedia('(max-width: 767px)').matches;
-    const count = mobile ? 9000 : 22000;
-    const dpr = Math.min(window.devicePixelRatio, 1.5);
-    renderer.setPixelRatio(dpr);
-
-    const scene = new Scene();
-    const camera = new PerspectiveCamera(35, 1, 0.1, 50);
-    camera.position.z = 9.5;
-
-    const f = buildFormations(count);
-    const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new BufferAttribute(f.sphere, 3));
-    geometry.setAttribute('aLattice', new BufferAttribute(f.lattice, 3));
-    geometry.setAttribute('aWave', new BufferAttribute(f.wave, 3));
-    geometry.setAttribute('aRing', new BufferAttribute(f.ring, 3));
-    geometry.setAttribute('aSeed', new BufferAttribute(f.seed, 1));
-
-    const uniforms = {
-      uTime: { value: 0 },
-      uIntro: { value: reduce ? 1 : 0 },
-      uChaos: { value: 0 },
-      uSize: { value: (mobile ? 30 : 26) * dpr },
-      uAspect: { value: 1 },
-      uMouse: { value: new Vector2(9, 9) },
-      uW: { value: new Vector4(1, 0, 0, 0) },
-      uOpacity: { value: 1 },
-      uBone: { value: new Color('#ece7df') },
-      uSignal: { value: new Color('#ff5a1f') },
-    };
-    const material = new ShaderMaterial({
-      vertexShader: vertex,
-      fragmentShader: fragment,
-      uniforms,
-      transparent: true,
-      depthWrite: false,
-      blending: AdditiveBlending,
-    });
-    const points = new Points(geometry, material);
-    points.frustumCulled = false;
-    scene.add(points);
-
-    // Where the cloud sits and how it looks, tweened between section states.
-    const place = { x: 0, y: 0, s: 1 };
-    let current = STATES.hero;
-    const apply = (state: State, immediate = false) => {
-      current = state;
+      // Without a GPU (software WebGL) the same scene costs whole CPU frames:
+      // draw fewer points at a lower frame rate there.
+      const info = gl.getExtension('WEBGL_debug_renderer_info');
+      const software = /swiftshader|llvmpipe|software|basic render/i.test(
+        info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '',
+      );
+      const reduce = prefersReducedMotion();
       const mobile = window.matchMedia('(max-width: 767px)').matches;
-      // Narrower desktop windows pull the cloud in and shrink it so it clears the copy.
-      const fit = mobile ? 0 : Math.min(1, Math.max(0.68, window.innerWidth / window.innerHeight / 1.75));
-      const target = { x: state.x * fit, y: state.y + (mobile ? 1.1 : 0), s: state.s * (mobile ? 0.66 : fit) };
-      const [a, b, c, d] = WEIGHTS[state.f];
-      const dur = immediate ? 0 : 1.7;
-      gsap.to(place, { ...target, duration: dur, ease: 'power3.inOut', overwrite: true });
-      gsap.to(uniforms.uW.value, { x: a, y: b, z: c, w: d, duration: dur, ease: 'power3.inOut', overwrite: true });
-      gsap.to(uniforms.uOpacity, { value: state.o * (mobile ? 0.6 : 1), duration: dur, overwrite: true });
-      if (!immediate) {
-        // The signal breaks into noise mid-morph, then re-forms.
-        gsap.timeline().to(uniforms.uChaos, { value: 1, duration: 0.7, ease: 'power2.in' }).to(uniforms.uChaos, { value: 0, duration: 1.1, ease: 'power2.out' });
-      }
-    };
-    apply(STATES.hero, true);
+      const count = software ? 6000 : mobile ? 8000 : 16000;
+      const dpr = software ? 1 : Math.min(window.devicePixelRatio, 1.5);
+      const frameMs = software ? 1000 / 30 : 0;
 
-    const size = () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      uniforms.uAspect.value = w / h;
-    };
-    size();
+      gl.useProgram(prog);
+      const f = buildFormations(count);
+      const attrs: [string, Float32Array, number][] = [
+        ['aSphere', f.sphere, 3],
+        ['aLattice', f.lattice, 3],
+        ['aWave', f.wave, 3],
+        ['aRing', f.ring, 3],
+        ['aSeed', f.seed, 1],
+      ];
+      const buffers = attrs.map(([name, data, size]) => {
+        const buf = gl.createBuffer();
+        const loc = gl.getAttribLocation(prog, name);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+        return buf;
+      });
+      const u = (name: string) => gl.getUniformLocation(prog, name);
+      const loc = {
+        time: u('uTime'),
+        intro: u('uIntro'),
+        chaos: u('uChaos'),
+        size: u('uSize'),
+        aspect: u('uAspect'),
+        focal: u('uFocal'),
+        mouse: u('uMouse'),
+        w: u('uW'),
+        rot: u('uRot'),
+        place: u('uPlace'),
+        opacity: u('uOpacity'),
+      };
+      gl.disable(gl.DEPTH_TEST);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE); // additive
+      gl.clearColor(0, 0, 0, 0);
+      gl.uniform1f(loc.focal, 1 / Math.tan((35 * Math.PI) / 360));
+      gl.uniform1f(loc.size, (mobile ? 30 : 28) * dpr);
 
-    // x/y: the shader's "observed" point (far away = none); px/py: gentle parallax.
-    const mouse = { x: 9, y: 9, tx: 9, ty: 9, px: 0, py: 0, inside: false };
-    let spin = 0;
-    let raf = 0;
-    let visible = true;
-    let last = performance.now();
+      // Animated values, tweened by GSAP and uploaded each frame.
+      const v = { intro: reduce ? 1 : 0, chaos: 0, opacity: 1, time: 0 };
+      const weights = { x: 1, y: 0, z: 0, w: 0 };
+      const place = { x: 0, y: 0, s: 1 };
+      let current = STATES.hero;
+      let aspect = 1;
 
-    const render = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 0.05);
-      last = now;
-      uniforms.uTime.value += dt;
-      mouse.x += (mouse.tx - mouse.x) * 0.08;
-      mouse.y += (mouse.ty - mouse.y) * 0.08;
-      mouse.px += ((mouse.inside ? mouse.tx : 0) - mouse.px) * 0.04;
-      mouse.py += ((mouse.inside ? mouse.ty : 0) - mouse.py) * 0.04;
-      uniforms.uMouse.value.set(mouse.x, mouse.y);
-      spin += dt * 0.09;
-      const still = uniforms.uW.value.z; // the wave field doesn't spin
-      points.rotation.y = spin * (1 - still) + mouse.px * 0.14;
-      points.rotation.x = 0.18 * (1 - still) - mouse.py * 0.09;
-      points.rotation.z = uniforms.uW.value.w * 0.5;
-      points.position.set(place.x, place.y, 0);
-      points.scale.setScalar(place.s);
-      renderer.render(scene, camera);
-    };
-    const loop = (now: number) => {
-      render(now);
-      raf = visible ? requestAnimationFrame(loop) : 0;
-    };
-    const start = () => {
-      if (!raf && visible && !reduce) {
-        last = performance.now();
-        raf = requestAnimationFrame(loop);
-      }
-    };
+      const apply = (state: State, immediate = false) => {
+        current = state;
+        const narrow = window.matchMedia('(max-width: 767px)').matches;
+        // Narrower desktop windows pull the cloud in and shrink it so it clears the copy.
+        const fit = narrow ? 0 : Math.min(1, Math.max(0.68, window.innerWidth / window.innerHeight / 1.75));
+        const target = { x: state.x * fit, y: state.y + (narrow ? 1.1 : 0), s: state.s * (narrow ? 0.66 : fit) };
+        const [a, b, c, d] = WEIGHTS[state.f];
+        const dur = immediate ? 0 : 1.7;
+        gsap.to(place, { ...target, duration: dur, ease: 'power3.inOut', overwrite: true });
+        gsap.to(weights, { x: a, y: b, z: c, w: d, duration: dur, ease: 'power3.inOut', overwrite: true });
+        gsap.to(v, { opacity: state.o * (narrow ? 0.6 : 1), duration: dur, overwrite: 'auto' });
+        if (!immediate) {
+          // The signal breaks into noise mid-morph, then re-forms.
+          gsap.timeline().to(v, { chaos: 1, duration: 0.7, ease: 'power2.in' }).to(v, { chaos: 0, duration: 1.1, ease: 'power2.out' });
+        }
+      };
+      apply(STATES.hero, true);
 
-    if (reduce) {
-      render(performance.now());
-    } else {
-      start();
-    }
-
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse') return;
-      mouse.tx = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.ty = -(e.clientY / window.innerHeight) * 2 + 1;
-      if (!mouse.inside) {
-        mouse.inside = true;
-        mouse.x = mouse.tx;
-        mouse.y = mouse.ty;
-      }
-    };
-    const onLeave = () => {
-      mouse.inside = false;
-      mouse.x = mouse.tx = 9;
-      mouse.y = mouse.ty = 9;
-    };
-    const onResize = () => {
+      const size = () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        el.width = Math.round(w * dpr);
+        el.height = Math.round(h * dpr);
+        gl.viewport(0, 0, el.width, el.height);
+        aspect = w / h;
+      };
       size();
-      apply(current, true);
+
+      // x/y: the shader's "observed" point (far away = none); px/py: gentle parallax.
+      const mouse = { x: 9, y: 9, tx: 9, ty: 9, px: 0, py: 0, inside: false };
+      let spin = 0;
+      let raf = 0;
+      let visible = true;
+      let last = performance.now();
+      let lastDraw = 0;
+
+      const render = (now: number) => {
+        const dt = Math.min((now - last) / 1000, 0.05);
+        last = now;
+        v.time += dt;
+        mouse.x += (mouse.tx - mouse.x) * 0.08;
+        mouse.y += (mouse.ty - mouse.y) * 0.08;
+        mouse.px += ((mouse.inside ? mouse.tx : 0) - mouse.px) * 0.04;
+        mouse.py += ((mouse.inside ? mouse.ty : 0) - mouse.py) * 0.04;
+        spin += dt * 0.09;
+        const still = weights.z; // the wave field doesn't spin
+        gl.uniform1f(loc.time, v.time);
+        gl.uniform1f(loc.intro, v.intro);
+        gl.uniform1f(loc.chaos, v.chaos);
+        gl.uniform1f(loc.opacity, v.opacity);
+        gl.uniform1f(loc.aspect, aspect);
+        gl.uniform2f(loc.mouse, mouse.x, mouse.y);
+        gl.uniform4f(loc.w, weights.x, weights.y, weights.z, weights.w);
+        gl.uniform3f(loc.rot, 0.18 * (1 - still) - mouse.py * 0.09, spin * (1 - still) + mouse.px * 0.14, weights.w * 0.5);
+        gl.uniform3f(loc.place, place.x, place.y, place.s);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.POINTS, 0, count);
+      };
+      const loop = (now: number) => {
+        if (now - lastDraw >= frameMs) {
+          lastDraw = now;
+          render(now);
+        }
+        raf = visible ? requestAnimationFrame(loop) : 0;
+      };
+      const start = () => {
+        if (!raf && visible && !reduce) {
+          last = performance.now();
+          raf = requestAnimationFrame(loop);
+        }
+      };
+
       if (reduce) render(performance.now());
-    };
-    const onLost = (e: Event) => {
-      e.preventDefault();
-      cancelAnimationFrame(raf);
-      raf = 0;
-      visible = false;
-      el.style.display = 'none';
-    };
-    window.addEventListener('pointermove', onMove, { passive: true });
-    document.addEventListener('pointerleave', onLeave);
-    window.addEventListener('blur', onLeave);
-    window.addEventListener('resize', onResize);
-    el.addEventListener('webglcontextlost', onLost);
+      else start();
 
-    // Pause whenever no section that shows the field is on screen.
-    const onScreen = new Set<Element>();
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => (e.isIntersecting ? onScreen.add(e.target) : onScreen.delete(e.target)));
-      visible = onScreen.size > 0 && el.style.display !== 'none';
-      start();
-    });
-    const sections = document.querySelectorAll<HTMLElement>('[data-formation]');
-    sections.forEach((s) => io.observe(s));
+      const onMove = (e: PointerEvent) => {
+        if (e.pointerType !== 'mouse') return;
+        mouse.tx = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.ty = -(e.clientY / window.innerHeight) * 2 + 1;
+        if (!mouse.inside) {
+          mouse.inside = true;
+          mouse.x = mouse.tx;
+          mouse.y = mouse.ty;
+        }
+      };
+      const onLeave = () => {
+        mouse.inside = false;
+        mouse.x = mouse.tx = 9;
+        mouse.y = mouse.ty = 9;
+      };
+      const onResize = () => {
+        size();
+        apply(current, true);
+        if (reduce) render(performance.now());
+      };
+      const onLost = (e: Event) => {
+        e.preventDefault();
+        cancelAnimationFrame(raf);
+        raf = 0;
+        visible = false;
+        el.style.display = 'none';
+      };
+      window.addEventListener('pointermove', onMove, { passive: true });
+      document.addEventListener('pointerleave', onLeave);
+      window.addEventListener('blur', onLeave);
+      window.addEventListener('resize', onResize);
+      el.addEventListener('webglcontextlost', onLost);
 
-    const ctx = gsap.context(() => {
-      if (reduce) return;
-      onIntro(() => gsap.to(uniforms.uIntro, { value: 1, duration: 2.6, ease: 'expo.out' }));
-      sections.forEach((s) => {
-        const state = STATES[s.dataset.formation ?? ''];
-        if (!state) return;
-        ScrollTrigger.create({
-          trigger: s,
-          start: 'top 55%',
-          end: 'bottom 45%',
-          refreshPriority: -1, // may be created after the work pin; measure after it
-          onEnter: () => apply(state),
-          onEnterBack: () => apply(state),
+      // Pause whenever no section that shows the field is on screen.
+      const onScreen = new Set<Element>();
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => (e.isIntersecting ? onScreen.add(e.target) : onScreen.delete(e.target)));
+        visible = onScreen.size > 0 && el.style.display !== 'none';
+        start();
+      });
+      const sections = document.querySelectorAll<HTMLElement>('[data-formation]');
+      sections.forEach((s) => io.observe(s));
+
+      const ctx = gsap.context(() => {
+        if (reduce) return;
+        gsap.to(el, { opacity: 1, duration: 0.8 });
+        onIntro(() => gsap.to(v, { intro: 1, duration: 1.8, ease: 'expo.out' }));
+        sections.forEach((s) => {
+          const state = STATES[s.dataset.formation ?? ''];
+          if (!state) return;
+          ScrollTrigger.create({
+            trigger: s,
+            start: 'top 55%',
+            end: 'bottom 45%',
+            refreshPriority: -1, // may be created after the work pin; measure after it
+            onEnter: () => apply(state),
+            onEnterBack: () => apply(state),
+          });
         });
       });
-    });
 
+      cleanup = () => {
+        ctx.revert();
+        cancelAnimationFrame(raf);
+        io.disconnect();
+        window.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerleave', onLeave);
+        window.removeEventListener('blur', onLeave);
+        window.removeEventListener('resize', onResize);
+        el.removeEventListener('webglcontextlost', onLost);
+        gsap.killTweensOf([place, weights, v]);
+        buffers.forEach((b) => gl.deleteBuffer(b));
+        gl.deleteProgram(prog);
+      };
+    };
+
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(begin, { timeout: 1200 })
+      : window.setTimeout(begin, 200);
     return () => {
-      ctx.revert();
-      cancelAnimationFrame(raf);
-      io.disconnect();
-      window.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerleave', onLeave);
-      window.removeEventListener('blur', onLeave);
-      window.removeEventListener('resize', onResize);
-      el.removeEventListener('webglcontextlost', onLost);
-      gsap.killTweensOf([place, uniforms.uW.value, uniforms.uOpacity, uniforms.uChaos, uniforms.uIntro]);
-      geometry.dispose();
-      material.dispose();
-      renderer.dispose();
+      cancelled = true;
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
+      cleanup?.();
     };
   }, []);
 
-  return <canvas ref={canvas} aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 h-screen w-screen" />;
+  return (
+    <canvas
+      ref={canvas}
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-0 h-screen w-screen opacity-0 motion-reduce:opacity-100"
+    />
+  );
 }

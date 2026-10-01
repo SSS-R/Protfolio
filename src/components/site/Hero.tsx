@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 import { SITE } from '@/lib/site';
-import { gsap, SplitText, onIntro, prefersReducedMotion, scrollToTarget } from './motion';
+import { SplitText, onIntro, prefersReducedMotion, scrollToTarget } from './motion';
 import Icon from './Icon';
 
 const SignalField = dynamic(() => import('./SignalField'), { ssr: false });
@@ -12,30 +12,31 @@ export default function Hero({ nowBuilding, studying }: { nowBuilding?: string; 
   const root = useRef<HTMLElement>(null);
 
   // Intro: the name rises letter by letter as the preloader lifts, then the lead
-  // and supporting details. Everything is readable/usable before it finishes.
+  // and supporting details. Splitting and indexing happen once here; the motion
+  // itself is CSS transitions keyed off .hero-split / .hero-in (globals.css), so
+  // nothing reads styles per letter at load. Readable/usable before it finishes.
   useEffect(() => {
     const el = root.current;
     if (!el || prefersReducedMotion()) return;
-    let tl: gsap.core.Timeline | undefined;
-    const ctx = gsap.context(() => {
-      const name = SplitText.create(el.querySelector('h1')!, { type: 'chars', mask: 'chars', aria: 'none' });
-      const lead = SplitText.create(el.querySelector('[data-hero-lead]')!, { type: 'words', mask: 'words' });
-      tl = gsap
-        .timeline({ paused: true, defaults: { ease: 'expo.out' } })
-        .from(name.chars, { yPercent: 108, duration: 1.5, stagger: 0.028 })
-        .from(lead.words, { yPercent: 115, duration: 1.2, stagger: 0.035 }, 0.25)
-        .fromTo('[data-hero-fade]', { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 1, stagger: 0.08 }, 0.6)
-        .fromTo(
-          document.querySelectorAll('.site-header .label > *'),
-          { opacity: 0, y: -10 },
-          { opacity: 1, y: 0, duration: 0.9, stagger: 0.06 },
-          0.5,
-        );
-    }, el);
-    const off = onIntro(() => tl?.play());
+    const index = (nodes: Element[]) => nodes.forEach((n, i) => (n as HTMLElement).style.setProperty('--i', String(i)));
+    const name = SplitText.create(el.querySelector('h1')!, { type: 'chars', mask: 'chars', charsClass: 'hc', aria: 'none' });
+    const lead = SplitText.create(el.querySelector('[data-hero-lead]')!, { type: 'words', mask: 'words', wordsClass: 'hw', aria: 'none' });
+    index(name.chars);
+    index(lead.words);
+    index([...el.querySelectorAll('[data-hero-fade]')]);
+    el.classList.add('hero-split');
+    // Two frames later, so the hidden state is painted before the transition
+    // starts (on repeat visits the intro has already fired).
+    let raf = 0;
+    const off = onIntro(() => {
+      raf = requestAnimationFrame(() => (raf = requestAnimationFrame(() => el.classList.add('hero-in'))));
+    });
     return () => {
       off();
-      ctx.revert();
+      cancelAnimationFrame(raf);
+      el.classList.remove('hero-split', 'hero-in');
+      name.revert();
+      lead.revert();
     };
   }, []);
 
@@ -100,7 +101,7 @@ export default function Hero({ nowBuilding, studying }: { nowBuilding?: string; 
         id="hero-name"
         data-intro
         aria-label={SITE.name}
-        className="display -mb-[0.06em] text-[21vw] leading-[0.8] md:flex md:justify-between md:text-[10.6vw]"
+        className="display -mb-[0.06em] text-[21vw] leading-[0.8] md:flex md:justify-between md:text-[10vw]"
       >
         <span className="block">Sultan</span>
         <span className="block">Sajed</span>

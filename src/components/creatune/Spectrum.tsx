@@ -33,9 +33,11 @@ export default function Spectrum({ className = '' }: { className?: string }) {
     let raf = 0;
     let visible = false;
     let lastPush = 0;
+    let lastDraw = 0;
+    let live = false;
 
     const sample = (row: Float32Array, t: number) => {
-      const live = readSpectrum(freq);
+      live = readSpectrum(freq);
       for (let i = 0; i < POINTS; i++) {
         const d = Math.abs(i / (POINTS - 1) - 0.5) * 2; // 0 centre → 1 edge
         let v: number;
@@ -99,7 +101,11 @@ export default function Spectrum({ className = '' }: { className?: string }) {
         sample(rows[head], now / 1000);
         lastPush = now;
       }
-      draw(Math.min(1, (now - lastPush) / PUSH_MS));
+      // The idle pulse is slow enough for 30 fps; real audio gets every frame.
+      if (live || now - lastDraw >= 32) {
+        lastDraw = now;
+        draw(Math.min(1, (now - lastPush) / PUSH_MS));
+      }
       raf = visible ? requestAnimationFrame(loop) : 0;
     };
 

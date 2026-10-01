@@ -1,7 +1,12 @@
 'use client';
 
-// The portfolio's single motion system: GSAP + ScrollTrigger, driven by data
-// attributes so server components can declare motion without shipping JS.
+// The portfolio's single motion system, driven by data attributes so server
+// components can declare motion without shipping JS.
+//
+// One-shot reveals (split, fade, clip, scramble) are an IntersectionObserver
+// toggling .is-in; CSS transitions do the animating (globals.css). That keeps
+// page load free of per-element style reads and runs on the compositor.
+// GSAP + ScrollTrigger handle only what is scroll-linked: pins, scrubs, marquee.
 //
 //   data-split            heading → words rise out of a mask on enter
 //   data-fade="0.1"       block fades up on enter (value = delay, s)
@@ -13,8 +18,8 @@
 //   data-marquee          contains two .marquee-track copies; velocity-aware loop
 //   data-hscroll          section pinned while [data-hscroll-track] slides left
 //
-// Everything is created inside one gsap.context per page and reverted on route
-// change. Under prefers-reduced-motion nothing is created: final states only.
+// Everything is created per page and reverted on route change. Under
+// prefers-reduced-motion nothing is created: final states only.
 
 import { useEffect, type RefObject } from 'react';
 import { usePathname } from 'next/navigation';
@@ -68,18 +73,56 @@ export function onIntro(cb: () => void): () => void {
 export function fireIntro() {
   if (window.__sssIntro) return;
   window.__sssIntro = true;
+  document.documentElement.classList.add('intro-in');
   window.dispatchEvent(new Event('sss:intro'));
 }
 
 // ── Reveal engine ──
 export function initReveals(root: HTMLElement): () => void {
-  const ready = () => document.documentElement.classList.add('motion-ready');
-
+  const html = document.documentElement;
   if (prefersReducedMotion()) {
-    ready();
+    html.classList.add('motion-ready');
     return () => {};
   }
 
+  // 1. DOM writes first (splits, stagger indexes), so the layout reads that
+  //    follow happen once instead of interleaving with them.
+  const splits: SplitText[] = [];
+  root.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
+    const split = SplitText.create(el, { type: 'words', mask: 'words', wordsClass: 'sw', aria: 'none' });
+    split.words.forEach((w, i) => (w as HTMLElement).style.setProperty('--i', String(i)));
+    splits.push(split);
+  });
+  const scrubs = [...root.querySelectorAll<HTMLElement>('[data-scrub-words]')].map((el) => {
+    const split = SplitText.create(el, { type: 'words', aria: 'none' });
+    splits.push(split);
+    return { el, words: split.words };
+  });
+  root.querySelectorAll<HTMLElement>('[data-fade]').forEach((el) => {
+    const delay = parseFloat(el.dataset.fade || '0');
+    if (delay) el.style.setProperty('--d', `${delay}s`);
+  });
+  html.classList.add('motion-ready');
+
+  // 2. One-shot reveals: the observer only flips a class.
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const el = entry.target as HTMLElement;
+        io.unobserve(el);
+        el.classList.add('is-in');
+        if (el.hasAttribute('data-scramble')) {
+          const text = el.textContent ?? '';
+          gsap.to(el, { duration: 1.3, scrambleText: { text, chars: CIPHER, revealDelay: 0.25, speed: 0.5 } });
+        }
+      }
+    },
+    { rootMargin: '0px 0px -8% 0px' },
+  );
+  root.querySelectorAll('[data-split], [data-fade], [data-clip], [data-scramble]').forEach((el) => io.observe(el));
+
+  // 3. Scroll-linked motion.
   const listeners: Array<() => void> = [];
   const mm = gsap.matchMedia();
   const ctx = gsap.context(() => {
@@ -109,41 +152,10 @@ export function initReveals(root: HTMLElement): () => void {
       });
     });
 
-    root.querySelectorAll<HTMLElement>('[data-split]').forEach((el) => {
-      const split = SplitText.create(el, { type: 'words', mask: 'words' });
-      gsap.from(split.words, {
-        yPercent: 115,
-        duration: 1.15,
-        ease: 'expo.out',
-        stagger: 0.055,
-        scrollTrigger: { trigger: el, start: 'top 88%', once: true },
-      });
-    });
-
-    root.querySelectorAll<HTMLElement>('[data-fade]').forEach((el) => {
-      // fromTo, not from: the CSS pre-hide would otherwise be read as the end state.
-      gsap.fromTo(el, { y: 36, opacity: 0 }, {
-        y: 0,
-        opacity: 1,
-        duration: 1.1,
-        ease: 'expo.out',
-        delay: parseFloat(el.dataset.fade || '0') || 0,
-        scrollTrigger: { trigger: el, start: 'top 92%', once: true },
-      });
-    });
-
-    // Images uncover from the bottom while their content settles from a slight zoom.
-    root.querySelectorAll<HTMLElement>('[data-clip]').forEach((el) => {
-      const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: 'top 85%', once: true } });
-      tl.fromTo(el, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.4, ease: 'expo.inOut' });
-      if (el.firstElementChild) tl.fromTo(el.firstElementChild, { scale: 1.25 }, { scale: 1, duration: 1.8, ease: 'expo.out' }, 0);
-    });
-
-    root.querySelectorAll<HTMLElement>('[data-scrub-words]').forEach((el) => {
-      const split = SplitText.create(el, { type: 'words' });
+    scrubs.forEach(({ el, words }) => {
       gsap.fromTo(
-        split.words,
-        { opacity: 0.14 },
+        words,
+        { opacity: 0.42 }, // dim but still ≥ 3:1 for this large text
         {
           opacity: 1,
           ease: 'none',
@@ -151,16 +163,6 @@ export function initReveals(root: HTMLElement): () => void {
           scrollTrigger: { trigger: el, start: 'top 82%', end: 'bottom 50%', scrub: true },
         },
       );
-    });
-
-    root.querySelectorAll<HTMLElement>('[data-scramble]').forEach((el) => {
-      const text = el.textContent ?? '';
-      el.setAttribute('aria-label', text);
-      gsap.to(el, {
-        duration: 1.3,
-        scrambleText: { text, chars: CIPHER, revealDelay: 0.25, speed: 0.5 },
-        scrollTrigger: { trigger: el, start: 'top 92%', once: true },
-      });
     });
 
     root.querySelectorAll<HTMLElement>('[data-line]').forEach((el) => {
@@ -178,12 +180,14 @@ export function initReveals(root: HTMLElement): () => void {
 
     root.querySelectorAll<HTMLElement>('[data-marquee]').forEach((el) => {
       const tracks = el.querySelectorAll<HTMLElement>('.marquee-track');
-      const loop = gsap.to(tracks, { xPercent: -100, duration: 38, ease: 'none', repeat: -1 });
+      const loop = gsap.to(tracks, { xPercent: -100, duration: 38, ease: 'none', repeat: -1, paused: true });
       let settle: gsap.core.Timeline | undefined;
       ScrollTrigger.create({
         trigger: el,
         start: 'top bottom',
         end: 'bottom top',
+        // Only runs while on screen.
+        onToggle: (self) => (self.isActive ? loop.play() : loop.pause()),
         // Scrolling fast pushes the loop faster, then it eases back to cruise.
         onUpdate: (self) => {
           const boost = gsap.utils.clamp(1, 6, 1 + Math.abs(self.getVelocity()) / 400);
@@ -206,14 +210,14 @@ export function initReveals(root: HTMLElement): () => void {
     listeners.push(() => el.removeEventListener('mouseenter', onEnter));
   });
 
-  ready();
-  ScrollTrigger.refresh();
   document.fonts?.ready.then(() => ScrollTrigger.refresh());
 
   return () => {
+    io.disconnect();
     listeners.forEach((off) => off());
     mm.revert();
     ctx.revert();
+    splits.forEach((split) => split.revert());
   };
 }
 

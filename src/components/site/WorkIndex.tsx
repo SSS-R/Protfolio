@@ -62,7 +62,7 @@ export default function WorkIndex({ projects }: { projects: Project[] }) {
             }}
             className="label rounded-full border border-ink/25 px-4 py-2.5 transition-colors duration-300 hover:border-ink aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-bone"
           >
-            {f === 'ALL' ? 'All' : CATEGORY_LABEL[f]} <span className="opacity-50">({String(count(f)).padStart(2, '0')})</span>
+            {f === 'ALL' ? 'All' : CATEGORY_LABEL[f]} <span className="opacity-65">({String(count(f)).padStart(2, '0')})</span>
           </button>
         ))}
       </div>

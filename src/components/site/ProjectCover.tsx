@@ -457,10 +457,10 @@ function CoverCanvas({ id }: { id: string }) {
       frame(now);
       raf = visible ? requestAnimationFrame(loop) : 0;
     };
-    const resize = () => {
-      const r = c.getBoundingClientRect();
-      w = r.width;
-      h = r.height;
+    // The observer already measured the box; reading layout again here would force a reflow.
+    const resize = ([entry]: ResizeObserverEntry[]) => {
+      w = entry.contentRect.width;
+      h = entry.contentRect.height;
       c.width = Math.round(w * dpr);
       c.height = Math.round(h * dpr);
       frame(performance.now());

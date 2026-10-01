@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { SITE } from '@/lib/site';
-import { CIPHER, fireIntro, getLenis, gsap } from './motion';
+import { CIPHER, fireIntro, getLenis, gsap, prefersReducedMotion } from './motion';
 
 const YEAR = new Date().getFullYear();
 
@@ -14,7 +14,10 @@ export default function Preloader() {
 
   useEffect(() => {
     const el = root.current;
-    if (!el || getComputedStyle(el).display === 'none') {
+    // Mirrors the CSS that hides it (no style read needed): repeat page of the
+    // session, or reduced motion.
+    const skip = document.documentElement.dataset.intro === 'seen' || prefersReducedMotion();
+    if (!el || skip) {
       fireIntro();
       return;
     }
@@ -32,14 +35,14 @@ export default function Preloader() {
         },
       })
       .to(name, {
-        duration: 1.5,
-        scrambleText: { text: SITE.name.toUpperCase(), chars: CIPHER, revealDelay: 0.35, speed: 0.45 },
+        duration: 0.9,
+        scrambleText: { text: SITE.name.toUpperCase(), chars: CIPHER, revealDelay: 0.15, speed: 0.6 },
       })
       .to(
         progress,
         {
           v: 100,
-          duration: 1.7,
+          duration: 1,
           ease: 'power2.inOut',
           onUpdate: () => {
             if (count) count.textContent = String(Math.round(progress.v)).padStart(3, '0');
@@ -47,13 +50,13 @@ export default function Preloader() {
         },
         0,
       )
-      .to(el, { yPercent: -100, duration: 1, ease: 'expo.inOut' }, '+=0.2')
+      .to(el, { yPercent: -100, duration: 0.8, ease: 'expo.inOut' }, '+=0.1')
       .add(() => {
         try {
           sessionStorage.setItem('sss-intro', '1');
         } catch {}
         fireIntro();
-      }, '-=0.6');
+      }, '-=0.5');
 
     return () => {
       tl.kill();

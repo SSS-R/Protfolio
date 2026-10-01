@@ -294,14 +294,91 @@ body {
 /* Header reads on ink and bone alike */
 .site-header { mix-blend-mode: difference; color: #ece7df; }
 
-/* Until the motion engine has set initial states, hide what it will reveal.
-   `js` is set by an inline script; `motion-ready` by the engine (or a 4s
-   failsafe), so content is never stuck hidden and is visible without JS. */
+/* ── Reveals (src/components/site/motion.ts) ──
+   Until the engine starts, hide what it will reveal. Once it has, each element
+   waits hidden until an IntersectionObserver adds .is-in and a CSS transition
+   plays it — no per-element style reads at load. Without JS `.js` is absent and
+   nothing is hidden; if the engine never starts, the 4s failsafe adds .no-motion. */
 .js:not(.motion-ready) [data-split],
 .js:not(.motion-ready) [data-fade],
 .js:not(.motion-ready) [data-clip],
 .js:not(.motion-ready) [data-intro] {
   opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-ready [data-split] .sw {
+    transform: translate3d(0, 115%, 0);
+    transition: transform 1.15s var(--ease-out-expo) calc(var(--i, 0) * 55ms);
+  }
+  .motion-ready [data-split].is-in .sw { transform: none; }
+
+  .motion-ready [data-fade] {
+    opacity: 0;
+    transform: translate3d(0, 36px, 0);
+    transition:
+      opacity 1.1s var(--ease-out-expo) var(--d, 0s),
+      transform 1.1s var(--ease-out-expo) var(--d, 0s);
+  }
+  .motion-ready [data-fade].is-in { opacity: 1; transform: none; }
+
+  .motion-ready [data-clip] {
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path 1.4s var(--ease-in-out-quart);
+  }
+  .motion-ready [data-clip] > * {
+    transform: scale(1.25);
+    transition: transform 1.8s var(--ease-out-expo);
+  }
+  .motion-ready [data-clip].is-in { clip-path: inset(0); }
+  .motion-ready [data-clip].is-in > * { transform: none; }
+
+  /* Hero intro: Hero.tsx splits and adds .hero-split; .hero-in arrives with the intro */
+  .hero-split .hc {
+    transform: translate3d(0, 108%, 0);
+    transition: transform 1.2s var(--ease-out-expo) calc(var(--i, 0) * 22ms);
+  }
+  .hero-split .hw {
+    transform: translate3d(0, 115%, 0);
+    transition: transform 1.1s var(--ease-out-expo) calc(150ms + var(--i, 0) * 30ms);
+  }
+  .hero-split [data-hero-fade] {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+    transition:
+      opacity 0.9s var(--ease-out-expo) calc(400ms + var(--i, 0) * 80ms),
+      transform 0.9s var(--ease-out-expo) calc(400ms + var(--i, 0) * 80ms);
+  }
+  .hero-in .hc,
+  .hero-in .hw { transform: none; }
+  .hero-in [data-hero-fade] { opacity: 1; transform: none; }
+
+  /* The header settles in with the intro */
+  .site-header .label > * {
+    transition:
+      opacity 0.8s var(--ease-out-expo) 0.35s,
+      transform 0.8s var(--ease-out-expo) 0.35s;
+  }
+  .js:not(.intro-in) .site-header .label > * {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+/* Failsafe: the engine never started — show everything, without motion */
+.no-motion [data-split],
+.no-motion [data-fade],
+.no-motion [data-clip],
+.no-motion [data-clip] > *,
+.no-motion [data-intro],
+.no-motion [data-hero-fade],
+.no-motion .sw,
+.no-motion .hc,
+.no-motion .hw,
+.no-motion .site-header .label > * {
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
 }
 
 /* Preloader only exists for JS users on their first page of the session */

@@ -25,13 +25,18 @@ Selected work (paper, pinned horizontal) → Focus (lattice) → Journey (paper,
 Sound / CreaTune (wave) → Contact (ring) → Footer.
 
 ## Motion
-- GSAP is the only animation system on portfolio pages (framer-motion stays for CreaTune).
+- GSAP + ScrollTrigger drive only scroll-linked motion (pins, scrubs, marquee, formations).
 - Lenis is the only smooth-scroll engine; off under `prefers-reduced-motion`.
-- Reveals are declarative: `data-split`, `data-fade`, `data-scrub-words`, `data-scramble`,
-  `data-draw`, `data-marquee` — wired once in `src/components/site/motion.ts`.
-- Three.js: one fixed point-cloud canvas on the home page (`SignalField`). Sections declare
-  `data-formation="sphere|lattice|wave|ring"`. DPR ≤ 1.5, paused when hidden/offscreen,
-  single still frame under reduced motion, removed on WebGL failure.
+- Reveals are declarative: `data-split`, `data-fade`, `data-clip`, `data-scramble`,
+  `data-scrub-words`, `data-line`, `data-marquee` — wired once in `src/components/site/motion.ts`.
+  One-shot reveals are an IntersectionObserver adding `.is-in` + CSS transitions (no style
+  reads at load); the hero intro is the same pattern (`.hero-split` / `.hero-in`).
+- WebGL: one fixed point-cloud canvas on the home page (`SignalField`), plain WebGL — one
+  program, one draw call, no 3D library. Sections declare `data-formation="sphere|lattice|wave|ring"`.
+  Starts on idle; DPR ≤ 1.5; fewer points at 30 fps on software WebGL; paused when
+  hidden/offscreen; single still frame under reduced motion; removed on WebGL failure.
+- Anything GSAP pins needs a React-owned wrapper element (the pin moves it into a
+  `.pin-spacer`; React must never have to remove the pinned node itself).
 - Route changes: an ink panel rises with a leading edge that frays into cipher-glyph tiles,
   the destination name decrypts in the centre ("Resolving signal — /work"), then the ink
   lifts off upward like the preloader. One canvas + one label (`Transitions.tsx`).

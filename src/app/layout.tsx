@@ -79,7 +79,7 @@ export const metadata: Metadata = {
 // Runs before paint: marks JS as available (so motion can pre-hide what it will
 // reveal), skips the preloader after the first page of a session, and never
 // leaves content hidden for more than 4s if the motion bundle fails.
-const bootScript = `(function(){var d=document.documentElement;d.classList.add('js');try{if(sessionStorage.getItem('sss-intro'))d.dataset.intro='seen'}catch(e){}setTimeout(function(){d.classList.add('motion-ready')},4000)})();`;
+const bootScript = `(function(){var d=document.documentElement;d.classList.add('js');try{if(sessionStorage.getItem('sss-intro'))d.dataset.intro='seen'}catch(e){}setTimeout(function(){if(!d.classList.contains('motion-ready'))d.classList.add('no-motion')},4000)})();`;
 
 // Dev only: Bitdefender's browser extension stamps bis_skin_checked / bis_register
 // onto every <div> before React hydrates, which trips the dev hydration overlay.

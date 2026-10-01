@@ -83,7 +83,7 @@ export default function Header() {
 
       <header ref={bar} className="site-header fixed inset-x-0 top-0 z-[80] px-5 pt-5 md:px-10 md:pt-6">
         <div className="label grid grid-cols-[1fr_auto] items-start gap-6 md:grid-cols-12">
-          <Link href="/" className="md:col-span-3" aria-label={`${SITE.name}, home`}>
+          <Link href="/" className="md:col-span-3">
             <span className="block">{SITE.name}</span>
             <span className="block opacity-60">Engineer — Dhaka</span>
           </Link>
