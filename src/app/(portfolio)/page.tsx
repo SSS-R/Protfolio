@@ -31,10 +31,7 @@ export default async function Home() {
   const edu = data?.education?.[0];
   const exp = data?.experience?.[0];
   const projects = data?.projects ?? [];
-  const featured = [
-    ...projects.filter((p) => p.category === 'SHIPPED'),
-    ...projects.filter((p) => p.category === 'ACTIVE'),
-  ];
+  const featured = [...projects.filter((p) => p.category === 'SHIPPED'), ...projects.filter((p) => p.category === 'ACTIVE')];
   const interests = data?.about?.interests ?? [];
   const toolkit = (data?.skills ?? []).map((s) => skillName(s.name));
   const tracks = music?.tracks ?? [];
@@ -84,56 +81,69 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 02 — Selected work (paper, pinned horizontal scroll on desktop) */}
-      <section id="work" data-hscroll className="paper overflow-hidden rounded-t-[28px] md:rounded-t-[44px]" aria-labelledby="work-title">
-        <div className="flex flex-col pb-16 pt-24 md:pt-28 lg:h-screen lg:pb-10">
-          <div className="flex flex-col gap-6 px-5 md:flex-row md:items-end md:justify-between md:px-10">
-            <div>
-              <div className="text-dim-ink">
-                <SectionLabel n="02">Selected work</SectionLabel>
+      {/* 02 — Selected work (paper, pinned horizontal scroll on desktop).
+          The plain wrapper is load-bearing: GSAP's pin moves the section into a
+          .pin-spacer, so React must only ever remove this div, never the section. */}
+      <div>
+        <section
+          id="work"
+          data-hscroll
+          className="paper overflow-hidden rounded-t-[28px] md:rounded-t-[44px]"
+          aria-labelledby="work-title"
+        >
+          <div className="flex flex-col pb-16 pt-24 md:pt-28 lg:h-screen lg:pb-10">
+            <div className="flex flex-col gap-6 px-5 md:flex-row md:items-end md:justify-between md:px-10">
+              <div>
+                <div className="text-dim-ink">
+                  <SectionLabel n="02">Selected work</SectionLabel>
+                </div>
+                <h2
+                  id="work-title"
+                  data-split
+                  className="mt-4 text-[13vw] font-medium leading-[0.9] tracking-[-0.05em] md:text-[6vw]"
+                >
+                  Things I&apos;ve <em className="italic-serif">built</em>
+                </h2>
               </div>
-              <h2 id="work-title" data-split className="mt-4 text-[13vw] font-medium leading-[0.9] tracking-[-0.05em] md:text-[6vw]">
-                Things I&apos;ve <em className="italic-serif">built</em>
-              </h2>
+              <div className="label flex items-center gap-8 text-dim-ink">
+                <span>
+                  {String(featured.length).padStart(2, '0')} / {String(projects.length).padStart(2, '0')} projects
+                </span>
+                <Link href="/work" className="u-link flex items-center gap-1 text-ink">
+                  Full index <Icon name="arrow-up-right" className="size-3.5" />
+                </Link>
+              </div>
             </div>
-            <div className="label flex items-center gap-8 text-dim-ink">
-              <span>
-                {String(featured.length).padStart(2, '0')} / {String(projects.length).padStart(2, '0')} projects
-              </span>
-              <Link href="/work" className="u-link flex items-center gap-1 text-ink">
-                Full index <Icon name="arrow-up-right" className="size-3.5" />
+
+            <div data-hscroll-track className="mt-10 flex flex-col gap-6 px-5 md:px-10 lg:mt-auto lg:w-max lg:flex-row">
+              {featured.map((p, i) => (
+                <ProjectCard key={p.id} project={p} index={i} />
+              ))}
+              <Link
+                href="/work"
+                data-cursor="Index"
+                className="group flex shrink-0 flex-col justify-between border border-line-ink bg-ink p-6 text-bone md:p-8 lg:h-[64vh] lg:w-[26vw]"
+              >
+                <span className="label text-dim">Also in the index</span>
+                <span className="text-[9vw] font-medium leading-[0.95] tracking-[-0.04em] lg:text-[2.6vw]">
+                  {projects
+                    .filter((p) => !featured.includes(p))
+                    .map((p) => p.title)
+                    .join(', ')}
+                </span>
+                <span className="label flex items-center gap-2">
+                  See every project
+                  <Icon name="arrow-up-right" className="size-4 transition-transform duration-500 group-hover:rotate-45" />
+                </span>
               </Link>
             </div>
-          </div>
 
-          <div data-hscroll-track className="mt-10 flex flex-col gap-6 px-5 md:px-10 lg:mt-auto lg:w-max lg:flex-row">
-            {featured.map((p, i) => (
-              <ProjectCard key={p.id} project={p} index={i} />
-            ))}
-            <Link
-              href="/work"
-              data-cursor="Index"
-              className="group flex shrink-0 flex-col justify-between border border-line-ink bg-ink p-6 text-bone md:p-8 lg:h-[64vh] lg:w-[26vw]"
-            >
-              <span className="label text-dim">Also in the index</span>
-              <span className="text-[9vw] font-medium leading-[0.95] tracking-[-0.04em] lg:text-[2.6vw]">
-                {projects
-                  .filter((p) => !featured.includes(p))
-                  .map((p) => p.title)
-                  .join(', ')}
-              </span>
-              <span className="label flex items-center gap-2">
-                See every project
-                <Icon name="arrow-up-right" className="size-4 transition-transform duration-500 group-hover:rotate-45" />
-              </span>
-            </Link>
+            <div className="mx-10 mt-8 hidden h-px bg-line-ink lg:block" aria-hidden="true">
+              <div data-hscroll-progress className="h-full origin-left scale-x-0 bg-ink" />
+            </div>
           </div>
-
-          <div className="mx-10 mt-8 hidden h-px bg-line-ink lg:block" aria-hidden="true">
-            <div data-hscroll-progress className="h-full origin-left scale-x-0 bg-ink" />
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* 03 — Focus */}
       <section data-formation="focus" className="relative z-[1] py-32 md:py-44" aria-labelledby="focus-title">
@@ -141,7 +151,11 @@ export default async function Home() {
           <div className="text-dim">
             <SectionLabel n="03">Focus</SectionLabel>
           </div>
-          <h2 id="focus-title" data-split className="mt-4 max-w-[12ch] text-[13vw] font-medium leading-[0.9] tracking-[-0.05em] md:text-[6vw]">
+          <h2
+            id="focus-title"
+            data-split
+            className="mt-4 max-w-[12ch] text-[13vw] font-medium leading-[0.9] tracking-[-0.05em] md:text-[6vw]"
+          >
             Where my <em className="italic-serif text-signal">attention</em> goes
           </h2>
           <ol className="mt-16 border-b border-line md:mt-24">
@@ -161,8 +175,10 @@ export default async function Home() {
 
         {toolkit.length ? (
           <div className="mt-24 md:mt-32">
-            <p className="label px-5 text-dim md:px-10">Toolkit</p>
-            <div data-marquee className="mt-6 flex overflow-hidden" aria-label={`Toolkit: ${toolkit.join(', ')}`}>
+            <p className="label px-5 text-dim md:px-10">
+              Toolkit<span className="sr-only">: {toolkit.join(', ')}</span>
+            </p>
+            <div data-marquee className="mt-6 flex overflow-hidden">
               {[0, 1].map((copy) => (
                 <div key={copy} className="marquee-track flex shrink-0 items-center" aria-hidden="true">
                   {toolkit.map((t, i) => (
@@ -179,11 +195,19 @@ export default async function Home() {
       </section>
 
       {/* 04 — Journey (paper) */}
-      <section id="journey" className="paper rounded-t-[28px] px-5 py-28 md:rounded-t-[44px] md:px-10 md:py-40" aria-labelledby="journey-title">
+      <section
+        id="journey"
+        className="paper rounded-t-[28px] px-5 py-28 md:rounded-t-[44px] md:px-10 md:py-40"
+        aria-labelledby="journey-title"
+      >
         <div className="text-dim-ink">
           <SectionLabel n="04">Journey</SectionLabel>
         </div>
-        <h2 id="journey-title" data-split className="mt-4 max-w-[13ch] text-[13vw] font-medium leading-[0.9] tracking-[-0.05em] md:text-[6vw]">
+        <h2
+          id="journey-title"
+          data-split
+          className="mt-4 max-w-[13ch] text-[13vw] font-medium leading-[0.9] tracking-[-0.05em] md:text-[6vw]"
+        >
           The road <em className="italic-serif">so far</em>
         </h2>
 
@@ -205,13 +229,19 @@ export default async function Home() {
                   <li key={n.id} className="relative grid gap-3 md:grid-cols-[1fr_auto] md:gap-10" data-fade>
                     <span
                       className={`absolute -left-[29px] top-2 size-2.5 rounded-full md:-left-[53px] ${
-                        n.status === 'active' ? 'bg-signal-deep ring-4 ring-signal/25' : n.status === 'locked' ? 'border border-ink/40 bg-bone' : 'bg-ink'
+                        n.status === 'active'
+                          ? 'bg-signal-deep ring-4 ring-signal/25'
+                          : n.status === 'locked'
+                            ? 'border border-ink/40 bg-bone'
+                            : 'bg-ink'
                       }`}
                       aria-hidden="true"
                     />
                     <div>
                       <p className="label text-dim-ink">{n.type}</p>
-                      <h3 className="mt-2 text-[6.5vw] font-medium leading-[1.05] tracking-[-0.03em] md:text-[2.2vw]">{n.title}</h3>
+                      <h3 className="mt-2 text-[6.5vw] font-medium leading-[1.05] tracking-[-0.03em] md:text-[2.2vw]">
+                        {n.title}
+                      </h3>
                       <p className="mt-2 max-w-[52ch] text-[15px] leading-relaxed text-dim-ink">{n.description}</p>
                     </div>
                     <span
@@ -240,7 +270,11 @@ export default async function Home() {
             <SectionLabel n="05">Off the clock</SectionLabel>
           </div>
           <div className="md:col-span-10">
-            <h2 id="sound-title" data-split className="max-w-[14ch] text-[13vw] font-medium leading-[0.9] tracking-[-0.05em] md:text-[6vw]">
+            <h2
+              id="sound-title"
+              data-split
+              className="max-w-[14ch] text-[13vw] font-medium leading-[0.9] tracking-[-0.05em] md:text-[6vw]"
+            >
               Sometimes the signal is <em className="italic-serif text-signal">sound</em>
             </h2>
             <p className="mt-8 max-w-[44ch] text-[17px] leading-relaxed text-dim md:text-[19px]" data-fade>

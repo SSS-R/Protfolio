@@ -90,16 +90,19 @@ export default function Terminal({ commands }: { commands: TerminalCommand[] }) 
     };
   }, [open, show, hide]);
 
+  // Scroll is locked only while open. The unlock lives in the cleanup: the panel
+  // unmounts on close, so a check on panel.current would skip it and leave the
+  // page unscrollable.
   useEffect(() => {
-    const el = panel.current;
-    if (!el) return;
-    if (open) {
-      getLenis()?.stop();
-      gsap.fromTo(el, { opacity: 0, y: 16, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'expo.out' });
-      input.current?.focus();
-    } else {
-      getLenis()?.start();
+    if (!open) return;
+    getLenis()?.stop();
+    if (panel.current) {
+      gsap.fromTo(panel.current, { opacity: 0, y: 16, scale: 0.98 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: 'expo.out' });
     }
+    input.current?.focus();
+    return () => {
+      getLenis()?.start();
+    };
   }, [open]);
 
   useEffect(() => {
